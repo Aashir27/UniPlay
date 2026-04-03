@@ -1,0 +1,119 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  STUDENT
+  ORGANIZER
+  ADMIN
+}
+
+enum SkillLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum GameStatus {
+  DRAFT
+  OPEN
+  FULL
+  CANCELLED
+  COMPLETED
+}
+
+enum ParticipationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  CANCELLED
+}
+
+enum NotificationType {
+  JOIN_REQUEST
+  JOIN_CONFIRM
+  CANCELLATION
+  WITHDRAWAL
+  REMINDER
+}
+
+model User {
+  userID       String  @id @default(uuid()) @db.Uuid
+  name         String
+  email        String  @unique
+  passwordHash String
+  isVerified   Boolean @default(false)
+  role         Role    @default(STUDENT)
+
+  sportProfiles  SportProfile[]
+  gamesCreated   Game[]          @relation("GameCreator")
+  participations Participation[]
+  notifications  Notification[]  @relation("NotificationRecipient")
+
+  @@index([role])
+}
+
+model SportProfile {
+  profileID  String     @id @default(uuid()) @db.Uuid
+  userID     String     @db.Uuid
+  sport      String
+  skillLevel SkillLevel
+
+  user User @relation(fields: [userID], references: [userID], onDelete: Cascade)
+
+  @@unique([userID, sport])
+  @@index([sport])
+}
+
+model Game {
+  gameID          String     @id @default(uuid()) @db.Uuid
+  creatorID       String     @db.Uuid
+  sport           String
+  dateTime        DateTime
+  location        String
+  skillLevel      SkillLevel
+  maxParticipants Int
+  currentCount    Int        @default(0)
+  status          GameStatus @default(DRAFT)
+
+  creator        User            @relation("GameCreator", fields: [creatorID], references: [userID], onDelete: Restrict)
+  participations Participation[]
+  notifications  Notification[]  @relation("NotificationGame")
+
+  @@index([creatorID])
+  @@index([sport, status, dateTime])
+}
+
+model Participation {
+  participationID String              @id @default(uuid()) @db.Uuid
+  userID          String              @db.Uuid
+  gameID          String              @db.Uuid
+  status          ParticipationStatus @default(PENDING)
+  joinedAt        DateTime            @default(now())
+
+  user User @relation(fields: [userID], references: [userID], onDelete: Cascade)
+  game Game @relation(fields: [gameID], references: [gameID], onDelete: Cascade)
+
+  @@unique([userID, gameID])
+  @@index([gameID])
+}
+
+model Notification {
+  notifID       String           @id @default(uuid()) @db.Uuid
+  recipientID   String           @db.Uuid
+  type          NotificationType
+  message       String
+  isRead        Boolean          @default(false)
+  relatedGameID String?          @db.Uuid
+  createdAt     DateTime         @default(now())
+
+  recipient User  @relation("NotificationRecipient", fields: [recipientID], references: [userID], onDelete: Cascade)
+  game      Game? @relation("NotificationGame", fields: [relatedGameID], references: [gameID], onDelete: SetNull)
+
+  @@index([recipientID, isRead])
+  @@index([relatedGameID])
+}
