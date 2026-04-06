@@ -5,12 +5,12 @@
 ## 1. System Architecture
 UniPlay utilizes a three-tier architecture, deployed in a serverless environment.
 * **Client Tier:** Next.js React components, styled with Tailwind CSS. State managed via NextAuth.js (Session).
-* **Server Tier:** Next.js API Routes (deployed as serverless functions on Vercel). Enforces business logic via dedicated service modules.
+* **Server Tier:** Next.js API Routes (deployed as serverless functions on AWS). Enforces business logic via dedicated service modules.
 * **Data Tier:** Managed PostgreSQL database. **Strict Rule:** All database interaction MUST occur through Prisma ORM. No raw SQL queries to prevent injection vulnerabilities.
-* **External Services:** Nodemailer (SMTP) for transactional emails. Vercel for hosting.
+* **External Services:** Nodemailer (SMTP) for transactional emails. AWS for hosting.
 
 ## 2. CI/CD Pipeline & DevOps Strategy
-To ensure code quality and reliable deployments, the project will utilize GitHub Actions paired with Vercel.
+To ensure code quality and reliable deployments, the project will utilize GitHub Actions paired with AWS.
 
 ### 2.1 Continuous Integration (GitHub Actions)
 Create a `.github/workflows/ci.yml` to run on every PR to `main`:
@@ -20,11 +20,11 @@ Create a `.github/workflows/ci.yml` to run on every PR to `main`:
 4.  **Prisma Validation:** Run `npx prisma validate` and `npx prisma generate` to catch schema errors.
 5.  **Automated Testing:** Run unit/integration tests (e.g., Jest/Vitest) mocking the Prisma client.
 
-### 2.2 Continuous Deployment (Vercel)
-* **Preview Environments:** Vercel automatically deploys every PR to a unique Preview URL. 
-    * *Architectural Note:* Ensure a separate preview database or mocked DB state is configured in Vercel Environment Variables so PRs do not mutate the production PostgreSQL database.
-* **Production Deployment:** Merges to `main` trigger Vercel to build and deploy to the production domain.
-    * *Build Step:* Vercel must run `npx prisma migrate deploy` before `next build` to ensure the DB schema is up-to-date.
+### 2.2 Continuous Deployment (AWS)
+* **Preview Environments:** AWS automatically deploys every PR to a unique Preview URL. 
+    * *Architectural Note:* Ensure a separate preview database or mocked DB state is configured in AWS Environment Variables so PRs do not mutate the production PostgreSQL database.
+* **Production Deployment:** Merges to `main` trigger AWS to build and deploy to the production domain.
+    * *Build Step:* AWS must run `npx prisma migrate deploy` before `next build` to ensure the DB schema is up-to-date.
 
 ## 3. Database Schema (Prisma Models)
 The database must be normalized. Use UUIDs for all primary keys.
@@ -85,7 +85,7 @@ The database must be normalized. Use UUIDs for all primary keys.
 
 ### Phase 1: Foundation (Auth & Database)
 - [ ] Initialize Next.js project with Tailwind, TypeScript, and Prisma.
-- [ ] Setup Vercel project and GitHub Actions CI workflow (lint, typecheck, prisma validate).
+- [ ] Setup AWS project and GitHub Actions CI workflow (lint, typecheck, prisma validate).
 - [ ] Define full Prisma schema based on Section 3.
 - [ ] Implement UI for Registration and Login.
 - [ ] Implement `AuthService`: University email whitelist validation, bcrypt hashing.
@@ -98,7 +98,7 @@ The database must be normalized. Use UUIDs for all primary keys.
 - [ ] Implement Game feed dashboard (Read operations).
 - [ ] Implement `ParticipationService`: Join a game (Implement Prisma `$transaction` for concurrency).
 - [ ] Implement Cancel Game / Cancel Participation logic.
-- [ ] Setup background cron job (or Vercel Cron) to transition Game status to `COMPLETED` when `dateTime` passes.
+- [ ] Setup background cron job (or AWS Cron) to transition Game status to `COMPLETED` when `dateTime` passes.
 
 ### Phase 3: Engagement (Discovery & Notifications)
 - [ ] Implement robust search and filtering UI/API for the Game Feed (by sport, skill level, date, location).
