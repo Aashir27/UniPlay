@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function Home() {
   return (
     <div className="flex flex-1 bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
@@ -40,6 +42,24 @@ export default function Home() {
         <section className="rounded-xl border border-dashed border-zinc-300 p-5 text-sm text-zinc-600 dark:border-zinc-700 dark:text-zinc-400">
           No platform branding is baked into this page. Deployment target can
           remain AWS as you add features.
+        </section>
+
+        <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
+          <h2 className="text-lg font-semibold">Sprint 1 Starter Screens</h2>
+          <div className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
+            <Link href="/register" className="rounded-md border px-3 py-2 hover:bg-zinc-50 dark:hover:bg-zinc-800">
+              /register — University registration
+            </Link>
+            <Link href="/verify-email" className="rounded-md border px-3 py-2 hover:bg-zinc-50 dark:hover:bg-zinc-800">
+              /verify-email — OTP verification
+            </Link>
+            <Link href="/login" className="rounded-md border px-3 py-2 hover:bg-zinc-50 dark:hover:bg-zinc-800">
+              /login — Secure sign-in
+            </Link>
+            <Link href="/profile" className="rounded-md border px-3 py-2 hover:bg-zinc-50 dark:hover:bg-zinc-800">
+              /profile — Auth-required profile
+            </Link>
+          </div>
         </section>
       </main>
     </div>

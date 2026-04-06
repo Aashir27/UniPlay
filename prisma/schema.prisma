@@ -49,12 +49,25 @@ model User {
   isVerified   Boolean @default(false)
   role         Role    @default(STUDENT)
 
-  sportProfiles  SportProfile[]
-  gamesCreated   Game[]          @relation("GameCreator")
-  participations Participation[]
-  notifications  Notification[]  @relation("NotificationRecipient")
+  sportProfiles       SportProfile[]
+  gamesCreated        Game[]               @relation("GameCreator")
+  participations      Participation[]
+  notifications       Notification[]       @relation("NotificationRecipient")
+  emailVerifications  EmailVerification[]
 
   @@index([role])
+}
+
+model EmailVerification {
+  id        String   @id @default(uuid()) @db.Uuid
+  userID    String   @db.Uuid
+  otp       String   // bcrypt hash of the OTP
+  expiresAt DateTime
+  usedAt    DateTime?
+
+  user User @relation(fields: [userID], references: [userID], onDelete: Cascade)
+
+  @@index([userID])
 }
 
 model SportProfile {
