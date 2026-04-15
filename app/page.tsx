@@ -1,67 +1,73 @@
 import Link from "next/link";
+import { getServerSession } from "next-auth";
+import { redirect } from "next/navigation";
 
-export default function Home() {
+import { authOptions } from "@/src/lib/auth";
+
+export default async function HomePage() {
+  const session = await getServerSession(authOptions);
+
+  if (session?.user?.id) {
+    redirect("/dashboard");
+  }
+
   return (
-    <div className="flex flex-1 bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
-      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-8 px-6 py-12 sm:px-10">
-        <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-          <p className="text-sm font-semibold uppercase tracking-wide text-emerald-600">
-            UniPlay Foundation
-          </p>
-          <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">
-            Sprint-ready backend baseline
-          </h1>
-          <p className="mt-3 max-w-3xl text-sm text-zinc-600 dark:text-zinc-400 sm:text-base">
-            This page is intentionally simple. Use it as a neutral starting
-            point while you incrementally integrate each sprint feature.
-          </p>
-        </section>
+    <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-6 py-10 sm:px-10">
+      <section className="overflow-hidden rounded-[28px] border border-[var(--up-border)] bg-[var(--up-surface)] shadow-2xl shadow-black/20 lg:grid lg:grid-cols-[1.1fr_0.9fr]">
+        <div className="relative overflow-hidden px-8 py-10 sm:px-10 sm:py-12">
+          <div className="absolute -left-20 -bottom-20 h-[22rem] w-[22rem] rounded-full bg-[radial-gradient(circle,_rgba(163,230,53,0.12)_0%,_transparent_65%)]" />
+          <div className="relative z-10 max-w-2xl space-y-6">
+            <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--up-accent)]">
+              UniPlay Foundation
+            </p>
+            <div className="space-y-4">
+              <h1 className="font-[family:var(--font-display)] text-4xl font-bold tracking-tight sm:text-5xl">
+                Find your game.
+                <br />
+                Build your team.
+              </h1>
+              <p className="max-w-2xl text-sm leading-7 text-[var(--up-muted)] sm:text-base">
+                Discover university sports games, join with your skill level,
+                and stay connected with organizers — all in one place.
+              </p>
+            </div>
 
-        <section className="grid gap-4 md:grid-cols-2">
-          <article className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
-            <h2 className="text-lg font-semibold">Current Baseline</h2>
-            <ul className="mt-3 space-y-2 text-sm text-zinc-600 dark:text-zinc-400">
-              <li>Prisma schema and relations in place</li>
-              <li>Service layer skeletons in src/services</li>
-              <li>Credentials auth skeleton in src/lib/auth.ts</li>
-              <li>AWS-focused deploy workflow and Dockerfile</li>
-            </ul>
-          </article>
-
-          <article className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
-            <h2 className="text-lg font-semibold">Next Integration Steps</h2>
-            <ul className="mt-3 space-y-2 text-sm text-zinc-600 dark:text-zinc-400">
-              <li>Sprint 1: auth routes + email verification flow</li>
-              <li>Sprint 2: game and profile APIs</li>
-              <li>Sprint 3: notifications and role middleware</li>
-              <li>Sprint 4: recommendation and optimization</li>
-            </ul>
-          </article>
-        </section>
-
-        <section className="rounded-xl border border-dashed border-zinc-300 p-5 text-sm text-zinc-600 dark:border-zinc-700 dark:text-zinc-400">
-          No platform branding is baked into this page. Deployment target can
-          remain AWS as you add features.
-        </section>
-
-        <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
-          <h2 className="text-lg font-semibold">Sprint 1 Starter Screens</h2>
-          <div className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
-            <Link href="/register" className="rounded-md border px-3 py-2 hover:bg-zinc-50 dark:hover:bg-zinc-800">
-              /register — University registration
-            </Link>
-            <Link href="/verify-email" className="rounded-md border px-3 py-2 hover:bg-zinc-50 dark:hover:bg-zinc-800">
-              /verify-email — OTP verification
-            </Link>
-            <Link href="/login" className="rounded-md border px-3 py-2 hover:bg-zinc-50 dark:hover:bg-zinc-800">
-              /login — Secure sign-in
-            </Link>
-            <Link href="/profile" className="rounded-md border px-3 py-2 hover:bg-zinc-50 dark:hover:bg-zinc-800">
-              /profile — Auth-required profile
-            </Link>
+            <div className="flex flex-wrap gap-3">
+              <Link
+                href="/login"
+                className="inline-flex h-11 items-center justify-center rounded-[10px] bg-[var(--up-accent)] px-4 text-sm font-bold text-[#0b0f1a] transition hover:bg-[var(--up-accent-dim)]"
+              >
+                Sign in
+              </Link>
+              <Link
+                href="/register"
+                className="inline-flex h-11 items-center justify-center rounded-[10px] border border-[var(--up-border-mid)] px-4 text-sm font-medium text-[var(--up-text)] transition hover:border-[rgba(163,230,53,0.25)] hover:bg-[var(--up-accent-bg)] hover:text-[var(--up-accent)]"
+              >
+                Create account
+              </Link>
+            </div>
           </div>
-        </section>
-      </main>
-    </div>
+        </div>
+
+        <div className="border-t border-[var(--up-border)] bg-[rgba(255,255,255,0.015)] px-8 py-10 sm:px-10 lg:border-l lg:border-t-0">
+          <div className="grid gap-4">
+            <StatCard title="1) Register" text="Sign up with your university email and secure password." />
+            <StatCard title="2) Verify email" text="Enter your OTP to activate your account." />
+            <StatCard title="3) Use dashboard" text="Manage profile, preferences, and upcoming game features." />
+          </div>
+        </div>
+      </section>
+    </main>
+  );
+}
+
+function StatCard({ title, text }: { title: string; text: string }) {
+  return (
+    <article className="rounded-2xl border border-[var(--up-border)] bg-[var(--up-surface-2)] p-5">
+      <h2 className="font-[family:var(--font-display)] text-lg font-bold tracking-tight">
+        {title}
+      </h2>
+      <p className="mt-2 text-sm leading-7 text-[var(--up-muted)]">{text}</p>
+    </article>
   );
 }

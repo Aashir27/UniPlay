@@ -1,26 +1,47 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Brand palette */
+  --up-bg:          #0b0f1a;
+  --up-surface:     #111827;
+  --up-surface-2:   #1c2537;
+  --up-border:      rgba(255,255,255,0.07);
+  --up-border-mid:  rgba(255,255,255,0.12);
+  --up-accent:      #a3e635;   /* lime-400 */
+  --up-accent-dim:  #84cc16;   /* lime-500 */
+  --up-accent-bg:   rgba(163,230,53,0.08);
+  --up-text:        #f1f5f9;
+  --up-muted:       #94a3b8;
+  --up-danger:      #f87171;
+  --up-danger-bg:   rgba(248,113,113,0.08);
+  --up-success:     #4ade80;
+  --up-success-bg:  rgba(74,222,128,0.08);
+
+  --font-display: "Space Grotesk", sans-serif;
+  --font-body:    "DM Sans", sans-serif;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+*, *::before, *::after { box-sizing: border-box; }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+html, body { height: 100%; }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  background: var(--up-bg);
+  color: var(--up-text);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
 }
+
+/* Utility resets */
+h1,h2,h3,h4,p { margin: 0; }
+a { color: inherit; text-decoration: none; }
+button { cursor: pointer; font-family: inherit; }
+input, select { font-family: inherit; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--up-surface); }
+::-webkit-scrollbar-thumb { background: var(--up-border-mid); border-radius: 3px; }

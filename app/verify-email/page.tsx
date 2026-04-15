@@ -1,4 +1,4 @@
-import { VerifyEmailClient } from "./verify-email-client";
+import { VerifyEmailScreen } from "@/src/components/auth/VerifyEmailScreen";
 
 export default async function VerifyEmailPage({
   searchParams,
@@ -6,6 +6,5 @@ export default async function VerifyEmailPage({
   searchParams: Promise<{ userID?: string }>;
 }) {
   const params = await searchParams;
-
-  return <VerifyEmailClient initialUserID={params.userID ?? ""} />;
+  return <VerifyEmailScreen initialUserID={params.userID ?? ""} />;
 }

@@ -2,7 +2,7 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 
-const protectedPrefixes = ["/profile", "/games"];
+const protectedPrefixes = ["/dashboard", "/profile", "/games"];
 
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
@@ -27,5 +27,5 @@ export async function proxy(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/profile/:path*", "/games/:path*"],
+  matcher: ["/dashboard/:path*", "/profile/:path*", "/games/:path*"],
 };
