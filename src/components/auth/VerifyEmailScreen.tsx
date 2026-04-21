@@ -177,7 +177,7 @@ export function VerifyEmailScreen({ initialUserID }: { initialUserID: string }) 
 
             <div className="space-y-1.5">
               <label className="text-[0.78rem] font-medium text-[var(--up-muted)]">6-digit code</label>
-              <div className="flex gap-2">
+              <div className="flex justify-center gap-2 sm:gap-3">
                 {digits.map((d, i) => (
                   <input
                     key={i}
@@ -229,8 +229,8 @@ export function VerifyEmailScreen({ initialUserID }: { initialUserID: string }) 
               </button>
             </div>
 
-            <Link href="/login" className="text-sm font-medium text-[var(--up-muted)] hover:text-[var(--up-text)]">
-              ← Back to sign in
+            <Link href="/register" className="text-sm font-medium text-[var(--up-muted)] hover:text-[var(--up-text)]">
+              ← Back to sign up
             </Link>
           </div>
         </div>
