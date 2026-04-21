@@ -2,13 +2,13 @@
  * src/lib/email.ts
  *
  * Thin wrapper around Nodemailer. Works with any SMTP provider
- * (AWS SES, SendGrid SMTP relay, Mailgun, Resend SMTP, or local MailHog).
+ * (AWS SES, SendGrid SMTP relay, Mailgun, Brevo SMTP, or local MailHog).
  *
  * Required env vars:
- *   SMTP_HOST        e.g. "smtp.eu-west-1.amazonaws.com"
+ *   SMTP_HOST        e.g. "smtp-relay.brevo.com"
  *   SMTP_PORT        e.g. "587"
- *   SMTP_USER        SMTP username / AWS access key
- *   SMTP_PASS        SMTP password / AWS secret key
+ *   SMTP_USER        SMTP username / provider login
+ *   SMTP_PASS        SMTP password / SMTP key
  *   SMTP_FROM        e.g. "UniPlay <no-reply@uniplay.app>"
  */
 
