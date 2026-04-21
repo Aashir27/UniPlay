@@ -135,7 +135,7 @@ export function VerifyEmailScreen({ initialUserID }: { initialUserID: string }) 
             Almost there.
           </h2>
           <p className="max-w-md text-sm leading-7 text-[var(--up-muted)]">
-            We've sent a 6-digit code to your university email. It expires in 15 minutes.
+            We&apos;ve sent a 6-digit code to your university email. It expires in 15 minutes.
           </p>
         </div>
 
@@ -143,7 +143,7 @@ export function VerifyEmailScreen({ initialUserID }: { initialUserID: string }) 
           <div className="flex gap-3">
             <InfoIcon />
             <p className="text-sm leading-6 text-[var(--up-muted)]">
-              Can't find it? Check your spam folder or request a new code.
+              Can&apos;t find it? Check your spam folder or request a new code.
             </p>
           </div>
         </div>
@@ -218,7 +218,7 @@ export function VerifyEmailScreen({ initialUserID }: { initialUserID: string }) 
 
           <div className="mt-5 flex items-center justify-between gap-3">
             <div>
-              <p className="text-[0.8rem] font-medium text-[var(--up-muted)]">Didn't receive it?</p>
+              <p className="text-[0.8rem] font-medium text-[var(--up-muted)]">Didn&apos;t receive it?</p>
               <button
                 type="button"
                 onClick={onResend}
