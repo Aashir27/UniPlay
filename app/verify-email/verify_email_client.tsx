@@ -118,14 +118,14 @@ export function VerifyEmailClient({ initialUserID }: { initialUserID: string }) 
           <div>
             <h2 style={styles.brandHeading}>Almost there.</h2>
             <p style={styles.brandSub}>
-              We've sent a 6-digit code to your university email. It expires in
+              We&apos;ve sent a 6-digit code to your university email. It expires in
               15 minutes.
             </p>
           </div>
           <div style={styles.infoBox}>
             <InfoIcon />
             <p style={styles.infoText}>
-              Can't find it? Check your spam folder or request a new code.
+              Can&apos;t find it? Check your spam folder or request a new code.
             </p>
           </div>
         </div>
@@ -182,7 +182,7 @@ export function VerifyEmailClient({ initialUserID }: { initialUserID: string }) 
           </form>
 
           <div style={styles.resendWrap}>
-            <p style={styles.resendLabel}>Didn't receive it?</p>
+            <p style={styles.resendLabel}>Didn&apos;t receive it?</p>
             <button
               type="button"
               onClick={onResend}
