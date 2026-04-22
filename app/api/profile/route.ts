@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { SkillLevel } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import { z } from "zod";
 
@@ -12,7 +11,7 @@ import {
 
 const UpsertProfileSchema = z.object({
   sport: z.string().min(2, "Sport must be at least 2 characters").max(50),
-  skillLevel: z.nativeEnum(SkillLevel),
+  skillLevel: z.enum(["BEGINNER", "INTERMEDIATE", "ADVANCED"]),
 });
 
 const DeleteProfileSchema = z.object({

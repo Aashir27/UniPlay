@@ -1,6 +1,5 @@
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
-import { GameStatus, SkillLevel } from "@prisma/client";
 import { z } from "zod";
 
 import { authOptions } from "@/src/lib/auth";
@@ -11,9 +10,9 @@ const UpdateGameSchema = z.object({
   sport: z.string().min(2).max(50).optional(),
   dateTime: z.coerce.date().optional(),
   location: z.string().min(2).max(120).optional(),
-  skillLevel: z.nativeEnum(SkillLevel).optional(),
+  skillLevel: z.enum(["BEGINNER", "INTERMEDIATE", "ADVANCED"]).optional(),
   maxParticipants: z.number().int().min(2).max(200).optional(),
-  status: z.nativeEnum(GameStatus).optional(),
+  status: z.enum(["DRAFT", "OPEN", "FULL", "CANCELLED", "COMPLETED"]).optional(),
 });
 
 async function assertCreator(gameID: string): Promise<

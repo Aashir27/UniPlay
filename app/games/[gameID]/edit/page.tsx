@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 
 import { authOptions } from "@/src/lib/auth";
 import { prisma } from "@/src/lib/prisma";
+import GameForm from "@/src/components/games/GameForm";
 
 export default async function EditGamePage({
   params,
@@ -41,16 +42,25 @@ export default async function EditGamePage({
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-4 px-6 py-10">
-      <h1 className="text-3xl font-bold">Creator-only game editor</h1>
-      <p className="text-sm text-zinc-600 dark:text-zinc-400">
-        You are the creator of this game. Use the API route
-        <code className="mx-1">/api/games/{gameID}</code>
-        with PATCH/DELETE from your future UI form.
-      </p>
-      <pre className="overflow-x-auto rounded-lg border p-4 text-xs">
-        {JSON.stringify(game, null, 2)}
-      </pre>
+    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-6 py-10">
+      <div>
+        <h1 className="text-3xl font-bold">Edit Game</h1>
+        <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+          Update the game details below.
+        </p>
+      </div>
+
+      <GameForm
+        gameID={gameID}
+        initialData={{
+          sport: game.sport,
+          dateTime: game.dateTime.toISOString().slice(0, 16),
+          location: game.location,
+          skillLevel: game.skillLevel,
+          maxParticipants: game.maxParticipants,
+        }}
+        isEditing={true}
+      />
     </main>
   );
 }
