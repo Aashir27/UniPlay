@@ -117,11 +117,57 @@ export async function joinGame(
 }
 
 export async function cancelParticipation(
-  _input: CancelParticipationInput,
-  _db: PrismaClient = prisma,
+  input: CancelParticipationInput,
+  db: PrismaClient = prisma,
 ): Promise<void> {
-  // Process 4.0 (Cancel / Withdraw)
-  // TODO: update participation status -> CANCELLED, decrement Game.currentCount,
-  // and reopen game if it was FULL.
-  throw new Error("Not implemented");
+  const maxRetries = 3;
+
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      await db.$transaction(
+        async (tx) => {
+          const participation = await tx.participation.findUnique({
+            where: {
+              userID_gameID: { userID: input.userID, gameID: input.gameID },
+            },
+          });
+
+          if (
+            !participation ||
+            participation.status === ParticipationStatus.CANCELLED
+          ) {
+            throw new Error("Participation not found");
+          }
+
+          await tx.participation.update({
+            where: {
+              userID_gameID: { userID: input.userID, gameID: input.gameID },
+            },
+            data: { status: ParticipationStatus.CANCELLED },
+          });
+
+          const game = await tx.game.update({
+            where: { gameID: input.gameID },
+            data: { currentCount: { decrement: 1 } },
+          });
+
+          if (game.status === GameStatus.FULL) {
+            await tx.game.update({
+              where: { gameID: input.gameID },
+              data: { status: GameStatus.OPEN },
+            });
+          }
+        },
+        { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+      );
+
+      return;
+    } catch (error) {
+      const isLastAttempt = attempt === maxRetries - 1;
+      if (!isLastAttempt && isRetryableTransactionError(error)) {
+        continue;
+      }
+      throw error;
+    }
+  }
 }
