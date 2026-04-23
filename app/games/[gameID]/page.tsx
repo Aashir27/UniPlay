@@ -4,6 +4,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/src/lib/auth";
 import ViewGameClient from "./ViewGameClient";
 
+export const dynamic = "force-dynamic";
+
 export default async function ViewGamePage({
   params,
 }: {

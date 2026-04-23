@@ -34,7 +34,8 @@ export default function ViewGameClient({
   const [isWithdrawing, setIsWithdrawing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [hasJoined, setHasJoined] = useState(initialHasJoined);
+
+  const hasJoined = initialHasJoined;
 
   const isFull =
     game.status === "FULL" || game.currentCount >= game.maxParticipants;
@@ -57,8 +58,9 @@ export default function ViewGameClient({
         setError(data.error ?? "Failed to join game");
         return;
       }
-      setHasJoined(true);
-      router.refresh();
+      // Navigate to the same page — forces a full server component re-render
+      // so participant list and counts reflect the new state from the DB.
+      router.push(`/games/${game.gameID}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
@@ -79,8 +81,7 @@ export default function ViewGameClient({
         setError(data.error ?? "Failed to withdraw");
         return;
       }
-      setHasJoined(false);
-      router.refresh();
+      router.push(`/games/${game.gameID}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
