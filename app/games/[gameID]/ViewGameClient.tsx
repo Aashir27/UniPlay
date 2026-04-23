@@ -19,6 +19,7 @@ export default function ViewGameClient({
 }: ViewGameClientProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const isFull =
@@ -50,6 +51,32 @@ export default function ViewGameClient({
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!confirm("Delete this game? It will be permanently removed from the platform.")) return;
+
+    setIsDeleting(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/games/${game.gameID}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        setError(data.error ?? "Failed to delete game");
+        return;
+      }
+
+      router.push("/games");
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -154,7 +181,7 @@ export default function ViewGameClient({
         </div>
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         {isCreator && (
           <a
             href={`/games/${game.gameID}/edit`}
@@ -162,6 +189,15 @@ export default function ViewGameClient({
           >
             Edit Game
           </a>
+        )}
+        {isCreator && (
+          <button
+            onClick={handleDelete}
+            disabled={isDeleting}
+            className="rounded-lg bg-red-600 px-4 py-2 font-medium text-white hover:bg-red-700 disabled:opacity-50"
+          >
+            {isDeleting ? "Deleting..." : "Delete Game"}
+          </button>
         )}
         <a
           href="/"
