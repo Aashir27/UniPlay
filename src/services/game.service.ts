@@ -51,7 +51,7 @@ export async function createGame(
       location: input.location,
       skillLevel: input.skillLevel,
       maxParticipants: input.maxParticipants,
-      // status defaults to DRAFT
+      status: "OPEN",
     },
   });
 }
