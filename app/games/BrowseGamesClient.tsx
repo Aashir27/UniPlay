@@ -16,13 +16,14 @@ export default function BrowseGamesClient({
 
   const [sportFilter, setSportFilter] = useState("");
   const [skillFilter, setSkillFilter] = useState("");
+  const [locationFilter, setLocationFilter] = useState("");
+  const [dateFilter, setDateFilter] = useState("");
   const [keyword, setKeyword] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
   const [activeIdx, setActiveIdx] = useState(-1);
 
   const searchRef = useRef<HTMLDivElement>(null);
 
-  // Close dropdown when clicking outside the search container
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (
@@ -36,7 +37,6 @@ export default function BrowseGamesClient({
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  // Suggestions from all loaded games, ignoring sport/skill dropdowns
   const suggestions = useMemo(() => {
     const k = keyword.trim().toLowerCase();
     if (!k) return [];
@@ -50,11 +50,22 @@ export default function BrowseGamesClient({
       .slice(0, 6);
   }, [initialGames, keyword]);
 
-  // Main game list: all three filters combined
   const filteredGames = useMemo(() => {
     return initialGames.filter((game) => {
       if (sportFilter && game.sport !== sportFilter) return false;
       if (skillFilter && game.skillLevel !== skillFilter) return false;
+      if (locationFilter.trim()) {
+        if (
+          !game.location
+            .toLowerCase()
+            .includes(locationFilter.trim().toLowerCase())
+        )
+          return false;
+      }
+      if (dateFilter) {
+        const gameDate = new Date(game.dateTime).toISOString().slice(0, 10);
+        if (gameDate !== dateFilter) return false;
+      }
       if (keyword.trim()) {
         const k = keyword.trim().toLowerCase();
         if (
@@ -67,7 +78,7 @@ export default function BrowseGamesClient({
       }
       return true;
     });
-  }, [initialGames, sportFilter, skillFilter, keyword]);
+  }, [initialGames, sportFilter, skillFilter, locationFilter, dateFilter, keyword]);
 
   const sports = [
     "Cricket",
@@ -100,16 +111,24 @@ export default function BrowseGamesClient({
     }
   }
 
-  function handleSuggestionClick(gameID: string) {
-    router.push(`/games/${gameID}`);
-    setShowDropdown(false);
-  }
-
   function clearKeyword() {
     setKeyword("");
     setShowDropdown(false);
     setActiveIdx(-1);
   }
+
+  function clearAllFilters() {
+    setSportFilter("");
+    setSkillFilter("");
+    setLocationFilter("");
+    setDateFilter("");
+    setKeyword("");
+    setShowDropdown(false);
+    setActiveIdx(-1);
+  }
+
+  const hasActiveFilters =
+    sportFilter || skillFilter || locationFilter || dateFilter || keyword.trim();
 
   const skillLabel = (level: string) =>
     level === "BEGINNER"
@@ -123,7 +142,6 @@ export default function BrowseGamesClient({
       {/* Keyword search */}
       <div ref={searchRef} className="relative">
         <div className="flex items-center rounded-lg border border-zinc-300 bg-white px-3 py-2 focus-within:border-blue-500 dark:border-zinc-700 dark:bg-zinc-900">
-          {/* Magnifying glass icon */}
           <svg
             className="mr-2 h-4 w-4 shrink-0 text-zinc-400"
             fill="none"
@@ -134,7 +152,6 @@ export default function BrowseGamesClient({
             <circle cx="11" cy="11" r="8" />
             <path d="m21 21-4.35-4.35" />
           </svg>
-
           <input
             type="text"
             value={keyword}
@@ -150,7 +167,6 @@ export default function BrowseGamesClient({
             }}
             onKeyDown={handleKeyDown}
           />
-
           {keyword && (
             <button
               onClick={clearKeyword}
@@ -170,7 +186,6 @@ export default function BrowseGamesClient({
           )}
         </div>
 
-        {/* Dropdown suggestions */}
         {showDropdown && keyword.trim() && (
           <div className="absolute z-10 mt-1 w-full rounded-lg border border-zinc-200 bg-white shadow-lg dark:border-zinc-700 dark:bg-zinc-900">
             {suggestions.length === 0 ? (
@@ -185,12 +200,13 @@ export default function BrowseGamesClient({
                     <li key={game.gameID}>
                       <button
                         className={`flex w-full items-center justify-between px-4 py-3 text-left text-sm transition hover:bg-zinc-50 dark:hover:bg-zinc-800 ${
-                          idx === activeIdx
-                            ? "bg-blue-50 dark:bg-zinc-800"
-                            : ""
+                          idx === activeIdx ? "bg-blue-50 dark:bg-zinc-800" : ""
                         } ${idx !== suggestions.length - 1 ? "border-b border-zinc-100 dark:border-zinc-800" : ""}`}
-                        onMouseDown={(e) => e.preventDefault()} // prevent blur before click
-                        onClick={() => handleSuggestionClick(game.gameID)}
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => {
+                          router.push(`/games/${game.gameID}`);
+                          setShowDropdown(false);
+                        }}
                         onMouseEnter={() => setActiveIdx(idx)}
                       >
                         <div className="min-w-0">
@@ -228,9 +244,9 @@ export default function BrowseGamesClient({
         )}
       </div>
 
-      {/* Sport & skill filters */}
+      {/* Filters */}
       <div className="rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <div>
             <label htmlFor="sport" className="block text-sm font-medium">
               Sport
@@ -239,9 +255,9 @@ export default function BrowseGamesClient({
               id="sport"
               value={sportFilter}
               onChange={(e) => setSportFilter(e.target.value)}
-              className="mt-2 w-full rounded-lg border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+              className="mt-2 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
             >
-              <option value="">None - Show All Sports</option>
+              <option value="">All Sports</option>
               {sports.map((sport) => (
                 <option key={sport} value={sport}>
                   {sport}
@@ -258,9 +274,9 @@ export default function BrowseGamesClient({
               id="skillLevel"
               value={skillFilter}
               onChange={(e) => setSkillFilter(e.target.value)}
-              className="mt-2 w-full rounded-lg border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+              className="mt-2 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
             >
-              <option value="">None - Show All Levels</option>
+              <option value="">All Levels</option>
               {skillLevels.map((level) => (
                 <option key={level} value={level}>
                   {skillLabel(level)}
@@ -268,15 +284,59 @@ export default function BrowseGamesClient({
               ))}
             </select>
           </div>
+
+          <div>
+            <label htmlFor="location" className="block text-sm font-medium">
+              Location
+            </label>
+            <input
+              id="location"
+              type="text"
+              value={locationFilter}
+              onChange={(e) => setLocationFilter(e.target.value)}
+              placeholder="e.g. Court 3"
+              className="mt-2 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900 placeholder:text-zinc-400"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="date" className="block text-sm font-medium">
+              Date
+            </label>
+            <input
+              id="date"
+              type="date"
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value)}
+              className="mt-2 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+            />
+          </div>
         </div>
+
+        {hasActiveFilters && (
+          <button
+            onClick={clearAllFilters}
+            className="mt-4 text-sm text-blue-600 hover:underline dark:text-blue-400"
+          >
+            Clear all filters
+          </button>
+        )}
       </div>
 
-      {/* Game grid */}
+      {/* Results */}
       {filteredGames.length === 0 ? (
         <div className="rounded-lg border border-zinc-200 p-8 text-center dark:border-zinc-800">
           <p className="text-zinc-600 dark:text-zinc-400">
             No games match your filters.
           </p>
+          {hasActiveFilters && (
+            <button
+              onClick={clearAllFilters}
+              className="mt-3 text-sm text-blue-600 hover:underline dark:text-blue-400"
+            >
+              Clear filters
+            </button>
+          )}
         </div>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2">
@@ -295,26 +355,20 @@ export default function BrowseGamesClient({
                   <span
                     className={`rounded px-2 py-1 text-xs font-medium ${
                       isFull
-                        ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                        : "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                        ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-200"
+                        : "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200"
                     }`}
                   >
-                    {isFull ? "Closed" : "Open"}
+                    {isFull ? "Full" : "Open"}
                   </span>
                 </div>
                 <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
                   {new Date(game.dateTime).toLocaleString()}
                 </p>
-                <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-500">
-                  {game.location}
-                </p>
-                <div className="mt-3 flex items-center justify-between">
-                  <span className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
-                    {game.currentCount}/{game.maxParticipants} participants
-                  </span>
-                  <span className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
-                    {skillLabel(game.skillLevel)}
-                  </span>
+                <p className="mt-1 text-xs text-zinc-500">{game.location}</p>
+                <div className="mt-3 flex items-center justify-between text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                  <span>{game.currentCount}/{game.maxParticipants} participants</span>
+                  <span>{skillLabel(game.skillLevel)}</span>
                 </div>
               </Link>
             );
