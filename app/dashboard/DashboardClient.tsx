@@ -4,14 +4,43 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
 
+type DashboardGame = {
+  gameID: string;
+  sport: string;
+  location: string;
+  dateTime: string;
+  skillLevel: string;
+  currentCount: number;
+  maxParticipants: number;
+  status: string;
+};
+
+const SPORT_EMOJI: Record<string, string> = {
+  Cricket: "🏏",
+  Football: "⚽",
+  Basketball: "🏀",
+  Tennis: "🎾",
+  Volleyball: "🏐",
+  "Table Tennis": "🏓",
+};
+
 export function DashboardClient({
   userName,
   userRole,
   userID,
+  stats,
+  openGames,
 }: {
   userName: string;
   userRole: string;
   userID: string;
+  stats: {
+    gamesJoined: number;
+    gamesHosted: number;
+    sportsActive: number;
+    notifications: number;
+  };
+  openGames: DashboardGame[];
 }) {
   const router = useRouter();
   const initials = userName
@@ -27,36 +56,16 @@ export function DashboardClient({
     router.refresh();
   }
 
-  const stats = [
-    {
-      label: "Games joined",
-      value: "3",
-      icon: <JoinIcon />,
-    },
-    {
-      label: "Games hosted",
-      value: userRole === "ORGANIZER" ? "2" : "0",
-      icon: <HostIcon />,
-    },
-    {
-      label: "Sports active",
-      value: "4",
-      icon: <SportIcon />,
-    },
-    {
-      label: "Notifications",
-      value: "5",
-      icon: <BellIcon />,
-    },
+  const statCards = [
+    { label: "Games joined", value: stats.gamesJoined, icon: <JoinIcon /> },
+    { label: "Games hosted", value: stats.gamesHosted, icon: <HostIcon /> },
+    { label: "Sports active", value: stats.sportsActive, icon: <SportIcon /> },
+    { label: "Notifications", value: stats.notifications, icon: <BellIcon /> },
   ];
 
   const quickActions = [
     { href: "/profile", label: "Edit profile", icon: <UserIcon /> },
-    {
-      href: "/games/demo/edit",
-      label: "Creator flow demo",
-      icon: <PlusIcon />,
-    },
+    { href: "/games", label: "Browse games", icon: <GamepadIcon /> },
     { href: "/dashboard", label: "Refresh dashboard", icon: <RefreshIcon /> },
   ];
 
@@ -162,7 +171,7 @@ export function DashboardClient({
           </section>
 
           <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {stats.map((stat) => (
+            {statCards.map((stat) => (
               <article
                 key={stat.label}
                 className="rounded-2xl border border-[var(--up-border)] bg-[var(--up-surface)] p-5"
@@ -200,32 +209,39 @@ export function DashboardClient({
               </div>
 
               <div className="space-y-3">
-                <GameRow
-                  sport="Football"
-                  emoji="⚽"
-                  location="Sports Complex"
-                  time="Wed · 6:00 PM"
-                  skill="Intermediate"
-                  count="8/10"
-                  open
-                />
-                <GameRow
-                  sport="Basketball"
-                  emoji="🏀"
-                  location="Main Court"
-                  time="Thu · 5:30 PM"
-                  skill="Beginner"
-                  count="6/12"
-                  open
-                />
-                <GameRow
-                  sport="Tennis"
-                  emoji="🎾"
-                  location="Tennis Courts"
-                  time="Fri · 4:00 PM"
-                  skill="Advanced"
-                  count="4/4"
-                />
+                {openGames.length === 0 ? (
+                  <p className="py-4 text-center text-sm text-[var(--up-muted)]">
+                    No open games right now.
+                  </p>
+                ) : (
+                  openGames.map((game) => {
+                    const isFull = game.currentCount >= game.maxParticipants;
+                    const skillLabel =
+                      game.skillLevel === "BEGINNER"
+                        ? "Beginner"
+                        : game.skillLevel === "INTERMEDIATE"
+                          ? "Intermediate"
+                          : "Advanced";
+                    const time = new Date(game.dateTime).toLocaleString([], {
+                      weekday: "short",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    });
+                    return (
+                      <Link key={game.gameID} href={`/games/${game.gameID}`}>
+                        <GameRow
+                          sport={game.sport}
+                          emoji={SPORT_EMOJI[game.sport] ?? "🏅"}
+                          location={game.location}
+                          time={time}
+                          skill={skillLabel}
+                          count={`${game.currentCount}/${game.maxParticipants}`}
+                          open={!isFull}
+                        />
+                      </Link>
+                    );
+                  })
+                )}
               </div>
             </section>
 
