@@ -21,8 +21,9 @@ export default function ViewGameClient({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const isFull = game.currentCount >= game.maxParticipants;
-  const isOpen = !isFull && game.status === "OPEN";
+  const isFull =
+    game.status === "FULL" || game.currentCount >= game.maxParticipants;
+  const isOpen = game.status === "OPEN" && !isFull;
 
   const handleJoin = async () => {
     if (!currentUserID) {
@@ -53,18 +54,45 @@ export default function ViewGameClient({
   };
 
   const getStatusBadge = () => {
-    if (isFull) {
-      return (
-        <span className="inline-block rounded-full bg-red-100 px-3 py-1 text-sm font-semibold text-red-800 dark:bg-red-900 dark:text-red-200">
-          Closed (Full)
-        </span>
-      );
+    switch (game.status) {
+      case "OPEN":
+        if (isFull) {
+          return (
+            <span className="inline-block rounded-full bg-yellow-100 px-3 py-1 text-sm font-semibold text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
+              Full
+            </span>
+          );
+        }
+        return (
+          <span className="inline-block rounded-full bg-green-100 px-3 py-1 text-sm font-semibold text-green-800 dark:bg-green-900 dark:text-green-200">
+            Open
+          </span>
+        );
+      case "FULL":
+        return (
+          <span className="inline-block rounded-full bg-yellow-100 px-3 py-1 text-sm font-semibold text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
+            Full
+          </span>
+        );
+      case "CANCELLED":
+        return (
+          <span className="inline-block rounded-full bg-red-100 px-3 py-1 text-sm font-semibold text-red-800 dark:bg-red-900 dark:text-red-200">
+            Cancelled
+          </span>
+        );
+      case "COMPLETED":
+        return (
+          <span className="inline-block rounded-full bg-blue-100 px-3 py-1 text-sm font-semibold text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+            Completed
+          </span>
+        );
+      case "DRAFT":
+        return (
+          <span className="inline-block rounded-full bg-gray-100 px-3 py-1 text-sm font-semibold text-gray-800 dark:bg-gray-800 dark:text-gray-200">
+            Draft
+          </span>
+        );
     }
-    return (
-      <span className="inline-block rounded-full bg-green-100 px-3 py-1 text-sm font-semibold text-green-800 dark:bg-green-900 dark:text-green-200">
-        Open
-      </span>
-    );
   };
 
   return (
