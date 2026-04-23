@@ -18,6 +18,7 @@ interface ViewGameClientProps {
   };
   isCreator: boolean;
   currentUserID: string | null;
+  currentUserRole: string | null;
   hasJoined: boolean;
 }
 
@@ -25,6 +26,7 @@ export default function ViewGameClient({
   game,
   isCreator,
   currentUserID,
+  currentUserRole,
   hasJoined: initialHasJoined,
 }: ViewGameClientProps) {
   const router = useRouter();
@@ -275,7 +277,12 @@ export default function ViewGameClient({
             {isDeleting ? "Deleting..." : "Delete Game"}
           </button>
         )}
-        {!isCreator && isOpen && !hasJoined && (
+        {!isCreator && currentUserRole === "ORGANIZER" && (
+          <span className="rounded-lg border border-zinc-300 px-4 py-2 text-sm text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
+            Organisers cannot join games
+          </span>
+        )}
+        {!isCreator && currentUserRole !== "ORGANIZER" && isOpen && !hasJoined && (
           <button
             onClick={handleJoin}
             disabled={isJoining}
@@ -284,7 +291,7 @@ export default function ViewGameClient({
             {isJoining ? "Joining..." : "Join Game"}
           </button>
         )}
-        {!isCreator && isFull && !hasJoined && (
+        {!isCreator && currentUserRole !== "ORGANIZER" && isFull && !hasJoined && (
           <button
             disabled
             className="rounded-lg bg-gray-400 px-4 py-2 font-medium text-white cursor-not-allowed"

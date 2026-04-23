@@ -10,6 +10,9 @@ export default async function NewGamePage() {
   if (!session?.user?.id) {
     redirect("/login");
   }
+  if (session.user.role !== "ORGANIZER") {
+    redirect("/dashboard");
+  }
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-6 py-10">
