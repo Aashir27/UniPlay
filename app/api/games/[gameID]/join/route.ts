@@ -2,7 +2,7 @@ import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 
 import { authOptions } from "@/src/lib/auth";
-import { prisma } from "@/src/lib/prisma";
+import { joinGame } from "@/src/services/participation.service";
 
 export async function POST(
   _req: Request,
@@ -17,50 +17,24 @@ export async function POST(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const game = await prisma.game.findUnique({
-    where: { gameID },
-    select: { currentCount: true, maxParticipants: true },
-  });
+  try {
+    await joinGame({ userID, gameID });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to join game";
 
-  if (!game) {
-    return NextResponse.json({ error: "Game not found" }, { status: 404 });
+    if (message === "Game not found") {
+      return NextResponse.json({ error: message }, { status: 404 });
+    }
+
+    if (
+      message === "Game is not open for joining" ||
+      message === "Game is full"
+    ) {
+      return NextResponse.json({ error: message }, { status: 400 });
+    }
+
+    throw err;
   }
-
-  if (game.currentCount >= game.maxParticipants) {
-    return NextResponse.json(
-      { error: "Game is full" },
-      { status: 400 },
-    );
-  }
-
-  // Check if user already joined
-  const existingParticipation = await prisma.participation.findUnique({
-    where: {
-      userID_gameID: { userID, gameID },
-    },
-  });
-
-  if (existingParticipation) {
-    return NextResponse.json(
-      { error: "Already joined this game" },
-      { status: 400 },
-    );
-  }
-
-  // Add participation and increment currentCount
-  await prisma.$transaction([
-    prisma.participation.create({
-      data: {
-        userID,
-        gameID,
-        status: "ACCEPTED",
-      },
-    }),
-    prisma.game.update({
-      where: { gameID },
-      data: { currentCount: { increment: 1 } },
-    }),
-  ]);
 
   return NextResponse.json({ ok: true }, { status: 200 });
 }
