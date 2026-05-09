@@ -4,6 +4,7 @@ import { useState, useMemo, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Game } from "@prisma/client";
+import { Select } from "@/src/components/ui/Select";
 
 interface BrowseGamesClientProps {
   initialGames: Game[];
@@ -251,38 +252,39 @@ export default function BrowseGamesClient({
             <label htmlFor="sport" className="block text-sm font-medium">
               Sport
             </label>
-            <select
+            <Select
               id="sport"
               value={sportFilter}
-              onChange={(e) => setSportFilter(e.target.value)}
-              className="mt-2 w-full rounded-lg border border-[var(--up-border-mid)] bg-[var(--up-surface-2)] px-3 py-2 text-sm text-[var(--up-text)]"
-            >
-              <option value="">All Sports</option>
-              {sports.map((sport) => (
-                <option key={sport} value={sport}>
-                  {sport}
-                </option>
-              ))}
-            </select>
+              onChange={setSportFilter}
+              options={[
+                { value: "", label: "All Sports" },
+                ...sports.map((sport) => ({ value: sport, label: sport })),
+              ]}
+              className="mt-2"
+              buttonClassName="text-sm"
+              listClassName="text-sm"
+            />
           </div>
 
           <div>
             <label htmlFor="skillLevel" className="block text-sm font-medium">
               Skill Level
             </label>
-            <select
+            <Select
               id="skillLevel"
               value={skillFilter}
-              onChange={(e) => setSkillFilter(e.target.value)}
-              className="mt-2 w-full rounded-lg border border-[var(--up-border-mid)] bg-[var(--up-surface-2)] px-3 py-2 text-sm text-[var(--up-text)]"
-            >
-              <option value="">All Levels</option>
-              {skillLevels.map((level) => (
-                <option key={level} value={level}>
-                  {skillLabel(level)}
-                </option>
-              ))}
-            </select>
+              onChange={setSkillFilter}
+              options={[
+                { value: "", label: "All Levels" },
+                ...skillLevels.map((level) => ({
+                  value: level,
+                  label: skillLabel(level),
+                })),
+              ]}
+              className="mt-2"
+              buttonClassName="text-sm"
+              listClassName="text-sm"
+            />
           </div>
 
           <div>

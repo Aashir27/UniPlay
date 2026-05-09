@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Select } from "@/src/components/ui/Select";
 
 interface GameFormProps {
   gameID?: string;
@@ -40,6 +41,12 @@ export default function GameForm({
     e.preventDefault();
     setIsLoading(true);
     setError(null);
+
+    if (!sport.trim()) {
+      setError("Please select a sport.");
+      setIsLoading(false);
+      return;
+    }
 
     try {
       const payload = {
@@ -90,21 +97,21 @@ export default function GameForm({
         <label htmlFor="sport" className="block text-sm font-medium">
           Sport
         </label>
-        <select
+        <Select
           id="sport"
           value={sport}
-          onChange={(e) => setSport(e.target.value)}
-          required
-          className="mt-1 w-full rounded-lg border border-[var(--up-border-mid)] bg-[var(--up-surface-2)] px-3 py-2 text-[var(--up-text)]"
-        >
-          <option value="">Select a sport</option>
-          <option value="Cricket">Cricket</option>
-          <option value="Football">Football</option>
-          <option value="Basketball">Basketball</option>
-          <option value="Tennis">Tennis</option>
-          <option value="Volleyball">Volleyball</option>
-          <option value="Table Tennis">Table Tennis</option>
-        </select>
+          onChange={setSport}
+          options={[
+            { value: "", label: "Select a sport" },
+            { value: "Cricket", label: "Cricket" },
+            { value: "Football", label: "Football" },
+            { value: "Basketball", label: "Basketball" },
+            { value: "Tennis", label: "Tennis" },
+            { value: "Volleyball", label: "Volleyball" },
+            { value: "Table Tennis", label: "Table Tennis" },
+          ]}
+          className="mt-1"
+        />
       </div>
 
       <div>
@@ -142,16 +149,17 @@ export default function GameForm({
         <label htmlFor="skillLevel" className="block text-sm font-medium">
           Skill Level
         </label>
-        <select
+        <Select
           id="skillLevel"
           value={skillLevel}
-          onChange={(e) => setSkillLevel(e.target.value)}
-          className="mt-1 w-full rounded-lg border border-[var(--up-border-mid)] bg-[var(--up-surface-2)] px-3 py-2 text-[var(--up-text)]"
-        >
-          <option value="BEGINNER">Beginner</option>
-          <option value="INTERMEDIATE">Intermediate</option>
-          <option value="ADVANCED">Advanced</option>
-        </select>
+          onChange={setSkillLevel}
+          options={[
+            { value: "BEGINNER", label: "Beginner" },
+            { value: "INTERMEDIATE", label: "Intermediate" },
+            { value: "ADVANCED", label: "Advanced" },
+          ]}
+          className="mt-1"
+        />
       </div>
 
       <div>

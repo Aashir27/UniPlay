@@ -34,6 +34,7 @@ export default function ViewGameClient({
   const [isDeleting, setIsDeleting] = useState(false);
   const [showParticipants, setShowParticipants] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
 
   const hasJoined = initialHasJoined;
 
@@ -68,7 +69,7 @@ export default function ViewGameClient({
   };
 
   const handleLeave = async () => {
-    if (!confirm("Leave this game?")) return;
+    setShowLeaveConfirm(false);
     setIsWithdrawing(true);
     setError(null);
     try {
@@ -122,30 +123,30 @@ export default function ViewGameClient({
     OPEN: {
       label: "Open",
       badge:
-        "bg-green-100 text-green-800 dark:bg-green-900/60 dark:text-green-200",
+        "border border-[rgba(163,230,53,0.25)] bg-[var(--up-accent-bg)] text-[var(--up-accent)]",
       description: "This game is actively accepting participants.",
     },
     FULL: {
       label: "Full",
       badge:
-        "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/60 dark:text-yellow-200",
+        "border border-[var(--up-border-mid)] bg-[var(--up-surface-2)] text-[var(--up-muted)]",
       description: "All spots are taken. A spot opens if someone leaves.",
     },
     CANCELLED: {
       label: "Cancelled",
-      badge: "bg-red-100 text-red-800 dark:bg-red-900/60 dark:text-red-200",
+      badge: "border border-[rgba(248,113,113,0.2)] bg-[var(--up-danger-bg)] text-[var(--up-danger)]",
       description: "This game has been cancelled.",
     },
     COMPLETED: {
       label: "Completed",
       badge:
-        "bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-200",
+        "border border-[var(--up-border-mid)] bg-[var(--up-surface-2)] text-[var(--up-muted)]",
       description: "This game has already been played.",
     },
     DRAFT: {
       label: "Draft",
       badge:
-        "bg-gray-100 text-gray-800 dark:bg-gray-800/60 dark:text-gray-200",
+        "border border-[var(--up-border-mid)] bg-[var(--up-surface-2)] text-[var(--up-muted)]",
       description: "This game is not yet published.",
     },
   };
@@ -163,35 +164,33 @@ export default function ViewGameClient({
   return (
     <>
       {error && (
-        <div className="rounded-lg bg-red-50 p-4 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400">
+        <div className="rounded-lg border border-[rgba(248,113,113,0.18)] bg-[var(--up-danger-bg)] p-4 text-sm text-[var(--up-danger)]">
           {error}
         </div>
       )}
 
-      {/* Header */}
-      <div className="flex flex-wrap items-center gap-3">
-        <h1 className="text-3xl font-bold">{game.sport}</h1>
-        <span
-          className={`inline-block rounded-full px-3 py-1 text-sm font-semibold ${cfg.badge}`}
-        >
-          {cfg.label}
-        </span>
-      </div>
+      <section className="overflow-hidden rounded-[28px] border border-[var(--up-border)] bg-[var(--up-surface)] p-6 shadow-2xl shadow-black/20 sm:p-8">
+        <div className="flex flex-wrap items-center gap-3">
+          <h1 className="font-[family:var(--font-display)] text-3xl font-bold tracking-tight">
+            {game.sport}
+          </h1>
+          <span className={`inline-block rounded-full px-3 py-1 text-sm font-semibold ${cfg.badge}`}>
+            {cfg.label}
+          </span>
+        </div>
+        <p className="mt-3 text-sm text-[var(--up-muted)]">{cfg.description}</p>
+        <p className="mt-3 text-sm text-[var(--up-muted)]">
+          Created by{" "}
+          <span className="font-medium text-[var(--up-text)]">
+            {game.creator?.name || game.creator?.email}
+          </span>
+        </p>
+      </section>
 
-      <p className="text-sm text-zinc-500 dark:text-zinc-400">{cfg.description}</p>
-
-      <p className="text-sm text-zinc-600 dark:text-zinc-400">
-        Created by{" "}
-        <span className="font-medium text-zinc-800 dark:text-zinc-200">
-          {game.creator?.name || game.creator?.email}
-        </span>
-      </p>
-
-      {/* Details card */}
-      <div className="rounded-lg border border-zinc-200 p-6 dark:border-zinc-800">
+      <div className="rounded-[20px] border border-[var(--up-border)] bg-[var(--up-surface)] p-6">
         <div className="grid gap-6 sm:grid-cols-2">
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+            <p className="text-xs font-medium uppercase tracking-wide text-[var(--up-muted)]">
               Date &amp; Time
             </p>
             <p className="mt-1 font-semibold">
@@ -199,19 +198,19 @@ export default function ViewGameClient({
             </p>
           </div>
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+            <p className="text-xs font-medium uppercase tracking-wide text-[var(--up-muted)]">
               Location
             </p>
             <p className="mt-1 font-semibold">{game.location}</p>
           </div>
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+            <p className="text-xs font-medium uppercase tracking-wide text-[var(--up-muted)]">
               Skill Level
             </p>
             <p className="mt-1 font-semibold">{skillLabel}</p>
           </div>
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+            <p className="text-xs font-medium uppercase tracking-wide text-[var(--up-muted)]">
               Participants
             </p>
             <p className="mt-1 font-semibold">
@@ -225,18 +224,18 @@ export default function ViewGameClient({
         <button
           type="button"
           onClick={() => setShowParticipants((visible) => !visible)}
-          className="rounded-lg border border-zinc-300 px-4 py-2 font-medium hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-900"
+          className="rounded-[10px] border border-[var(--up-border-mid)] px-4 py-2 font-medium text-[var(--up-text)] transition hover:border-[rgba(163,230,53,0.25)] hover:bg-[var(--up-accent-bg)] hover:text-[var(--up-accent)]"
         >
           {showParticipants ? "Hide Participants" : "View Participants"}
         </button>
 
         {showParticipants && (
-          <div className="rounded-lg border border-zinc-200 p-6 dark:border-zinc-800">
+          <div className="rounded-[20px] border border-[var(--up-border)] bg-[var(--up-surface)] p-6">
             <h2 className="mb-4 text-base font-semibold">
               Participants ({game.participations.length}/{game.maxParticipants})
             </h2>
             {game.participations.length === 0 ? (
-              <p className="text-sm text-zinc-500 dark:text-zinc-400">
+              <p className="text-sm text-[var(--up-muted)]">
                 No participants yet.
               </p>
             ) : (
@@ -246,12 +245,12 @@ export default function ViewGameClient({
                   return (
                     <li
                       key={p.userID}
-                      className="flex items-center justify-between rounded-lg bg-zinc-50 px-4 py-2.5 dark:bg-zinc-900"
+                      className="flex items-center justify-between rounded-[12px] border border-[var(--up-border)] bg-[var(--up-surface-2)] px-4 py-2.5"
                     >
                       <span className="text-sm font-medium">
                         {p.user.name || p.user.email}
                         {isMe && (
-                          <span className="ml-2 text-xs text-zinc-400">(you)</span>
+                          <span className="ml-2 text-xs text-[var(--up-muted)]">(you)</span>
                         )}
                       </span>
                     </li>
@@ -268,7 +267,7 @@ export default function ViewGameClient({
         {isCreator && (
           <Link
             href={`/games/${game.gameID}/edit`}
-            className="rounded-lg bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700"
+            className="rounded-[10px] bg-[var(--up-accent)] px-4 py-2 font-medium text-[#0b0f1a] transition hover:bg-[var(--up-accent-dim)]"
           >
             Edit Game
           </Link>
@@ -277,7 +276,7 @@ export default function ViewGameClient({
           <button
             onClick={handleDelete}
             disabled={isDeleting}
-            className="rounded-lg bg-red-600 px-4 py-2 font-medium text-white hover:bg-red-700 disabled:opacity-50"
+            className="rounded-[10px] border border-[rgba(248,113,113,0.2)] bg-[var(--up-danger-bg)] px-4 py-2 font-medium text-[var(--up-danger)] transition hover:bg-[rgba(248,113,113,0.14)] disabled:opacity-50"
           >
             {isDeleting ? "Deleting..." : "Delete Game"}
           </button>
@@ -286,7 +285,7 @@ export default function ViewGameClient({
           <button
             onClick={handleJoin}
             disabled={isJoining}
-            className="rounded-lg bg-green-600 px-4 py-2 font-medium text-white hover:bg-green-700 disabled:opacity-50"
+            className="rounded-[10px] bg-[var(--up-accent)] px-4 py-2 font-medium text-[#0b0f1a] transition hover:bg-[var(--up-accent-dim)] disabled:opacity-50"
           >
             {isJoining ? "Joining..." : "Join Game"}
           </button>
@@ -294,27 +293,58 @@ export default function ViewGameClient({
         {isFull && !hasJoined && (
           <button
             disabled
-            className="rounded-lg bg-gray-400 px-4 py-2 font-medium text-white cursor-not-allowed"
+            className="cursor-not-allowed rounded-[10px] border border-[var(--up-border-mid)] bg-[var(--up-surface-2)] px-4 py-2 font-medium text-[var(--up-muted)]"
           >
             Game Full
           </button>
         )}
         {hasJoined && isActive && (
           <button
-            onClick={handleLeave}
+            onClick={() => setShowLeaveConfirm(true)}
             disabled={isWithdrawing}
-            className="rounded-lg border border-orange-500 px-4 py-2 font-medium text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950 disabled:opacity-50"
+            className="rounded-[10px] border border-[rgba(248,113,113,0.25)] px-4 py-2 font-medium text-[var(--up-danger)] transition hover:bg-[var(--up-danger-bg)] disabled:opacity-50"
           >
             {isWithdrawing ? "Leaving..." : "Leave Game"}
           </button>
         )}
         <Link
           href="/games"
-          className="rounded-lg border border-zinc-300 px-4 py-2 font-medium hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-900"
+          className="rounded-[10px] border border-[var(--up-border-mid)] px-4 py-2 font-medium text-[var(--up-text)] transition hover:border-[rgba(163,230,53,0.25)] hover:bg-[var(--up-accent-bg)] hover:text-[var(--up-accent)]"
         >
           Back to Games
         </Link>
       </div>
+
+      {showLeaveConfirm && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="w-full max-w-md rounded-[18px] border border-[var(--up-border)] bg-[var(--up-surface)] p-6 shadow-2xl shadow-black/40">
+            <h3 className="text-lg font-semibold">Leave this game?</h3>
+            <p className="mt-2 text-sm text-[var(--up-muted)]">
+              You will be removed from the participant list and lose your spot.
+            </p>
+            <div className="mt-5 flex flex-wrap justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setShowLeaveConfirm(false)}
+                className="rounded-[10px] border border-[var(--up-border-mid)] px-4 py-2 text-sm font-medium text-[var(--up-text)] transition hover:bg-[var(--up-accent-bg)]"
+              >
+                Keep spot
+              </button>
+              <button
+                type="button"
+                onClick={handleLeave}
+                className="rounded-[10px] bg-[var(--up-danger)] px-4 py-2 text-sm font-medium text-[#0b0f1a] transition hover:bg-[rgba(248,113,113,0.85)]"
+              >
+                Leave game
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
