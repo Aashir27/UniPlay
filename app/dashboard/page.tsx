@@ -47,8 +47,6 @@ export default async function DashboardPage() {
   return (
     <DashboardClient
       userName={session.user.name ?? "UniPlay member"}
-      userRole={session.user.role}
-      userID={userID}
       stats={{ gamesJoined, gamesHosted, sportsActive, notifications }}
       openGames={openGames.map((g) => ({
         gameID: g.gameID,

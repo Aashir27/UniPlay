@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Game } from "@prisma/client";
 
@@ -18,7 +19,6 @@ interface ViewGameClientProps {
   };
   isCreator: boolean;
   currentUserID: string | null;
-  currentUserRole: string | null;
   hasJoined: boolean;
 }
 
@@ -26,13 +26,13 @@ export default function ViewGameClient({
   game,
   isCreator,
   currentUserID,
-  currentUserRole,
   hasJoined: initialHasJoined,
 }: ViewGameClientProps) {
   const router = useRouter();
   const [isJoining, setIsJoining] = useState(false);
   const [isWithdrawing, setIsWithdrawing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showParticipants, setShowParticipants] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const hasJoined = initialHasJoined;
@@ -58,8 +58,7 @@ export default function ViewGameClient({
         setError(data.error ?? "Failed to join game");
         return;
       }
-      // Navigate to the same page — forces a full server component re-render
-      // so participant list and counts reflect the new state from the DB.
+      // Navigate to the same page to force a full server component re-render.
       router.push(`/games/${game.gameID}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
@@ -68,8 +67,8 @@ export default function ViewGameClient({
     }
   };
 
-  const handleWithdraw = async () => {
-    if (!confirm("Withdraw from this game?")) return;
+  const handleLeave = async () => {
+    if (!confirm("Leave this game?")) return;
     setIsWithdrawing(true);
     setError(null);
     try {
@@ -78,7 +77,7 @@ export default function ViewGameClient({
       });
       if (!res.ok) {
         const data = await res.json();
-        setError(data.error ?? "Failed to withdraw");
+        setError(data.error ?? "Failed to leave game");
         return;
       }
       router.push(`/games/${game.gameID}`);
@@ -130,12 +129,12 @@ export default function ViewGameClient({
       label: "Full",
       badge:
         "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/60 dark:text-yellow-200",
-      description: "All spots are taken. Withdraw becomes available if someone leaves.",
+      description: "All spots are taken. A spot opens if someone leaves.",
     },
     CANCELLED: {
       label: "Cancelled",
       badge: "bg-red-100 text-red-800 dark:bg-red-900/60 dark:text-red-200",
-      description: "This game has been cancelled by the organizer.",
+      description: "This game has been cancelled.",
     },
     COMPLETED: {
       label: "Completed",
@@ -182,7 +181,7 @@ export default function ViewGameClient({
       <p className="text-sm text-zinc-500 dark:text-zinc-400">{cfg.description}</p>
 
       <p className="text-sm text-zinc-600 dark:text-zinc-400">
-        Organised by{" "}
+        Created by{" "}
         <span className="font-medium text-zinc-800 dark:text-zinc-200">
           {game.creator?.name || game.creator?.email}
         </span>
@@ -222,52 +221,57 @@ export default function ViewGameClient({
         </div>
       </div>
 
-      {/* Participant list */}
-      <div className="rounded-lg border border-zinc-200 p-6 dark:border-zinc-800">
-        <h2 className="mb-4 text-base font-semibold">
-          Participants ({game.participations.length}/{game.maxParticipants})
-        </h2>
-        {game.participations.length === 0 ? (
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">
-            No participants yet.
-          </p>
-        ) : (
-          <ul className="space-y-2">
-            {game.participations.map((p) => {
-              const isHost = p.userID === game.creatorID;
-              const isMe = p.userID === currentUserID;
-              return (
-                <li
-                  key={p.userID}
-                  className="flex items-center justify-between rounded-lg bg-zinc-50 px-4 py-2.5 dark:bg-zinc-900"
-                >
-                  <span className="text-sm font-medium">
-                    {p.user.name || p.user.email}
-                    {isMe && (
-                      <span className="ml-2 text-xs text-zinc-400">(you)</span>
-                    )}
-                  </span>
-                  {isHost && (
-                    <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">
-                      Organiser
-                    </span>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
+      <div className="space-y-3">
+        <button
+          type="button"
+          onClick={() => setShowParticipants((visible) => !visible)}
+          className="rounded-lg border border-zinc-300 px-4 py-2 font-medium hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-900"
+        >
+          {showParticipants ? "Hide Participants" : "View Participants"}
+        </button>
+
+        {showParticipants && (
+          <div className="rounded-lg border border-zinc-200 p-6 dark:border-zinc-800">
+            <h2 className="mb-4 text-base font-semibold">
+              Participants ({game.participations.length}/{game.maxParticipants})
+            </h2>
+            {game.participations.length === 0 ? (
+              <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                No participants yet.
+              </p>
+            ) : (
+              <ul className="space-y-2">
+                {game.participations.map((p) => {
+                  const isMe = p.userID === currentUserID;
+                  return (
+                    <li
+                      key={p.userID}
+                      className="flex items-center justify-between rounded-lg bg-zinc-50 px-4 py-2.5 dark:bg-zinc-900"
+                    >
+                      <span className="text-sm font-medium">
+                        {p.user.name || p.user.email}
+                        {isMe && (
+                          <span className="ml-2 text-xs text-zinc-400">(you)</span>
+                        )}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
         )}
       </div>
 
       {/* Actions */}
       <div className="flex flex-wrap gap-2">
         {isCreator && (
-          <a
+          <Link
             href={`/games/${game.gameID}/edit`}
             className="rounded-lg bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700"
           >
             Edit Game
-          </a>
+          </Link>
         )}
         {isCreator && (
           <button
@@ -278,12 +282,7 @@ export default function ViewGameClient({
             {isDeleting ? "Deleting..." : "Delete Game"}
           </button>
         )}
-        {!isCreator && currentUserRole === "ORGANIZER" && (
-          <span className="rounded-lg border border-zinc-300 px-4 py-2 text-sm text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
-            Organisers cannot join games
-          </span>
-        )}
-        {!isCreator && currentUserRole !== "ORGANIZER" && isOpen && !hasJoined && (
+        {isOpen && !hasJoined && (
           <button
             onClick={handleJoin}
             disabled={isJoining}
@@ -292,7 +291,7 @@ export default function ViewGameClient({
             {isJoining ? "Joining..." : "Join Game"}
           </button>
         )}
-        {!isCreator && currentUserRole !== "ORGANIZER" && isFull && !hasJoined && (
+        {isFull && !hasJoined && (
           <button
             disabled
             className="rounded-lg bg-gray-400 px-4 py-2 font-medium text-white cursor-not-allowed"
@@ -300,21 +299,21 @@ export default function ViewGameClient({
             Game Full
           </button>
         )}
-        {!isCreator && hasJoined && isActive && (
+        {hasJoined && isActive && (
           <button
-            onClick={handleWithdraw}
+            onClick={handleLeave}
             disabled={isWithdrawing}
             className="rounded-lg border border-orange-500 px-4 py-2 font-medium text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950 disabled:opacity-50"
           >
-            {isWithdrawing ? "Withdrawing..." : "Withdraw"}
+            {isWithdrawing ? "Leaving..." : "Leave Game"}
           </button>
         )}
-        <a
+        <Link
           href="/games"
           className="rounded-lg border border-zinc-300 px-4 py-2 font-medium hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-900"
         >
           Back to Games
-        </a>
+        </Link>
       </div>
     </>
   );

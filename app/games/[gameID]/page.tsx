@@ -40,7 +40,6 @@ export default async function ViewGamePage({
 
   const session = await getServerSession(authOptions);
   const currentUserID = session?.user?.id ?? null;
-  const currentUserRole = session?.user?.role ?? null;
   const isCreator = currentUserID === game.creatorID;
   const hasJoined =
     currentUserID !== null &&
@@ -52,7 +51,6 @@ export default async function ViewGamePage({
         game={game}
         isCreator={isCreator}
         currentUserID={currentUserID}
-        currentUserRole={currentUserRole}
         hasJoined={hasJoined}
       />
     </main>

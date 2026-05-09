@@ -6,12 +6,6 @@ datasource db {
   provider = "postgresql"
 }
 
-enum Role {
-  STUDENT
-  ORGANIZER
-  ADMIN
-}
-
 enum SkillLevel {
   BEGINNER
   INTERMEDIATE
@@ -47,15 +41,12 @@ model User {
   email        String  @unique
   passwordHash String
   isVerified   Boolean @default(false)
-  role         Role    @default(STUDENT)
 
   sportProfiles       SportProfile[]
   gamesCreated        Game[]               @relation("GameCreator")
   participations      Participation[]
   notifications       Notification[]       @relation("NotificationRecipient")
   emailVerifications  EmailVerification[]
-
-  @@index([role])
 }
 
 model EmailVerification {

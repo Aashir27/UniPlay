@@ -65,7 +65,39 @@ export async function joinGame(
           });
 
           if (existing) {
-            return existing;
+            if (
+              existing.status === ParticipationStatus.PENDING ||
+              existing.status === ParticipationStatus.ACCEPTED
+            ) {
+              return existing;
+            }
+
+            const rejoined = await tx.participation.update({
+              where: {
+                userID_gameID: {
+                  userID: input.userID,
+                  gameID: input.gameID,
+                },
+              },
+              data: {
+                status: ParticipationStatus.PENDING,
+                joinedAt: new Date(),
+              },
+            });
+
+            const nextCount = game.currentCount + 1;
+            const nextStatus =
+              nextCount >= game.maxParticipants ? GameStatus.FULL : game.status;
+
+            await tx.game.update({
+              where: { gameID: game.gameID },
+              data: {
+                currentCount: { increment: 1 },
+                status: nextStatus,
+              },
+            });
+
+            return rejoined;
           }
 
           const participation = await tx.participation.create({
@@ -92,7 +124,7 @@ export async function joinGame(
             data: {
               recipientID: game.creatorID,
               type: NotificationType.JOIN_REQUEST,
-              message: "A student requested to join your game.",
+              message: "A player requested to join your game.",
               relatedGameID: game.gameID,
             },
           });
@@ -134,7 +166,8 @@ export async function cancelParticipation(
 
           if (
             !participation ||
-            participation.status === ParticipationStatus.CANCELLED
+            (participation.status !== ParticipationStatus.PENDING &&
+              participation.status !== ParticipationStatus.ACCEPTED)
           ) {
             throw new Error("Participation not found");
           }
@@ -146,17 +179,33 @@ export async function cancelParticipation(
             data: { status: ParticipationStatus.CANCELLED },
           });
 
-          const game = await tx.game.update({
+          const game = await tx.game.findUnique({
             where: { gameID: input.gameID },
-            data: { currentCount: { decrement: 1 } },
+            select: {
+              currentCount: true,
+              maxParticipants: true,
+              status: true,
+            },
           });
 
-          if (game.status === GameStatus.FULL) {
-            await tx.game.update({
-              where: { gameID: input.gameID },
-              data: { status: GameStatus.OPEN },
-            });
+          if (!game) {
+            throw new Error("Game not found");
           }
+
+          const nextCount = Math.max(game.currentCount - 1, 0);
+          const nextStatus =
+            game.status === GameStatus.FULL &&
+            nextCount < game.maxParticipants
+              ? GameStatus.OPEN
+              : game.status;
+
+          await tx.game.update({
+            where: { gameID: input.gameID },
+            data: {
+              currentCount: nextCount,
+              status: nextStatus,
+            },
+          });
         },
         { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
       );

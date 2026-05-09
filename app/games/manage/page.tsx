@@ -20,7 +20,7 @@ export default async function ManageGamesPage() {
         <div>
           <h1 className="text-3xl font-bold">My Games</h1>
           <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-            Manage the games you've created. Edit details, cancel games, or view
+            Manage the games you&apos;ve created. Edit details, cancel games, or view
             participant info.
           </p>
         </div>
@@ -35,7 +35,7 @@ export default async function ManageGamesPage() {
       {games.length === 0 ? (
         <div className="rounded-lg border border-zinc-200 p-8 text-center dark:border-zinc-800">
           <p className="text-zinc-600 dark:text-zinc-400">
-            You haven't created any games yet.
+            You haven&apos;t created any games yet.
           </p>
           <Link
             href="/games/new"

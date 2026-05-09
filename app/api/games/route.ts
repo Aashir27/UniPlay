@@ -1,5 +1,6 @@
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
+import type { Prisma } from "@prisma/client";
 import { z } from "zod";
 
 import { authOptions } from "@/src/lib/auth";
@@ -38,11 +39,14 @@ export async function POST(req: Request): Promise<NextResponse> {
   }
 
   // Create game and auto-join creator
-  const game = await prisma.$transaction(async (tx: any) => {
-    const newGame = await createGame({
-      creatorID: userID,
-      ...parsed.data,
-    }, tx);
+  const game = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+    const newGame = await createGame(
+      {
+        creatorID: userID,
+        ...parsed.data,
+      },
+      tx,
+    );
 
     // Auto-join creator as a participant
     await tx.participation.create({

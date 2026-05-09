@@ -8,7 +8,7 @@ export default function BackButton() {
   return (
     <button
       onClick={() => router.push("/")}
-      className="rounded-lg border border-zinc-300 px-4 py-2 font-medium hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-900"
+      className="rounded-lg border border-[var(--up-border-mid)] px-4 py-2 font-medium text-[var(--up-text)] hover:bg-[var(--up-accent-bg)]"
     >
       Back to Home
     </button>

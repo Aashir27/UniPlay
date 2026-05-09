@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Role } from "@prisma/client";
 import { z } from "zod";
 
 import { register } from "@/src/services/auth.service";
@@ -11,7 +10,6 @@ const RegisterSchema = z.object({
     .string()
     .min(8, "Password must be at least 8 characters")
     .max(72, "Password too long"),
-  role: z.nativeEnum(Role).optional(),
 });
 
 export async function POST(req: NextRequest): Promise<NextResponse> {

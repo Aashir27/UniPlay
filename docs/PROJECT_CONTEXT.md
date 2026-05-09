@@ -35,7 +35,6 @@ The database must be normalized. Use UUIDs for all primary keys.
     * `email` (String, @unique) - Must validate against university domain whitelist.
     * `passwordHash` (String) - Hashed via bcrypt (min 10 rounds).
     * `isVerified` (Boolean, default: false)
-    * `role` (Enum: `STUDENT`, `ORGANIZER`, `ADMIN`)
 * **SportProfile:**
     * `profileID` (String, UUID, @id)
     * `userID` (String, UUID, @relation)
@@ -104,7 +103,7 @@ The database must be normalized. Use UUIDs for all primary keys.
 - [ ] Implement robust search and filtering UI/API for the Game Feed (by sport, skill level, date, location).
 - [ ] Implement `NotificationService`: Create DB records for join requests, approvals, and cancellations.
 - [ ] Build global notification bell UI with unread badge calculation.
-- [ ] Implement middleware for Role-Based Access Control (RBAC) ensuring sensitive API routes are protected.
+- [ ] Implement middleware ensuring sensitive API routes are protected for authenticated users.
 - [ ] Build basic Admin dashboard for content moderation (delete posts, ban users).
 
 ### Phase 4: Intelligence & Polish
@@ -121,7 +120,7 @@ Use PostgreSQL as the provider.
 
 Implement models for User, SportProfile, Game, Participation, and Notification (mapping to DFD stores D1–D4).
 
-Strict Requirements: All primary keys must be UUIDs. Include all Enums from the SDS (Role, SkillLevel, GameStatus, SportCategory).
+Strict Requirements: All primary keys must be UUIDs. Include all remaining Enums from the SDS; users are plain authenticated users with no access-level field.
 
 Ensure the Participation model correctly handles the many-to-many relationship between User and Game with an enum for status (PENDING, ACCEPTED, REJECTED).
 
@@ -166,7 +165,7 @@ Use PostgreSQL as the provider.
 
 Implement models for User, SportProfile, Game, Participation, and Notification (mapping to DFD stores D1–D4).
 
-Strict Requirements: All primary keys must be UUIDs. Include all Enums from the SDS (Role, SkillLevel, GameStatus, SportCategory).
+Strict Requirements: All primary keys must be UUIDs. Include all remaining Enums from the SDS; users are plain authenticated users with no access-level field.
 
 Ensure the Participation model correctly handles the many-to-many relationship between User and Game with an enum for status (PENDING, ACCEPTED, REJECTED).
 

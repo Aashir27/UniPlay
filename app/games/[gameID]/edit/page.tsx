@@ -14,9 +14,6 @@ export default async function EditGamePage({
   if (!session?.user?.id) {
     redirect("/login");
   }
-  if (session.user.role !== "ORGANIZER") {
-    redirect("/dashboard");
-  }
 
   const { gameID } = await params;
 

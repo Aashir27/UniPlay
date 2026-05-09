@@ -10,7 +10,7 @@
 
 import bcrypt from "bcrypt";
 import crypto from "crypto";
-import type { Prisma, PrismaClient, Role, User } from "@prisma/client";
+import type { Prisma, PrismaClient, User } from "@prisma/client";
 
 import { prisma } from "@/src/lib/prisma";
 import { sendVerificationEmail } from "@/src/lib/email";
@@ -23,14 +23,13 @@ type DbClient = PrismaClient | Prisma.TransactionClient;
 
 export type PublicUser = Pick<
   User,
-  "userID" | "name" | "email" | "role" | "isVerified"
+  "userID" | "name" | "email" | "isVerified"
 >;
 
 export interface RegisterInput {
   name: string;
   email: string;
   password: string;
-  role?: Role;
 }
 
 export interface LoginInput {
@@ -60,7 +59,6 @@ function toPublicUser(user: User): PublicUser {
     userID: user.userID,
     name: user.name,
     email: user.email,
-    role: user.role,
     isVerified: user.isVerified,
   };
 }
@@ -148,7 +146,6 @@ export async function register(
         name: input.name.trim(),
         email,
         passwordHash,
-        role: input.role,
         // isVerified defaults to false
       },
     });
@@ -166,7 +163,7 @@ export async function register(
 
   try {
     await issueOtp(user, db);
-  } catch (err) {
+  } catch {
     // Keep registration atomic from the API consumer perspective:
     // if OTP delivery fails, remove the newly created unverified user.
     await prismaDb.user.delete({ where: { userID: user.userID } }).catch(() => {

@@ -78,10 +78,10 @@ export default function GameForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="space-y-6 rounded-lg border border-zinc-200 p-6 dark:border-zinc-800"
+      className="space-y-6 rounded-lg border border-[var(--up-border)] bg-[var(--up-surface)] p-6"
     >
       {error && (
-        <div className="rounded-lg bg-red-50 p-4 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400">
+        <div className="rounded-lg border border-[rgba(248,113,113,0.18)] bg-[var(--up-danger-bg)] p-4 text-sm text-[var(--up-danger)]">
           {error}
         </div>
       )}
@@ -95,7 +95,7 @@ export default function GameForm({
           value={sport}
           onChange={(e) => setSport(e.target.value)}
           required
-          className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+          className="mt-1 w-full rounded-lg border border-[var(--up-border-mid)] bg-[var(--up-surface-2)] px-3 py-2 text-[var(--up-text)]"
         >
           <option value="">Select a sport</option>
           <option value="Cricket">Cricket</option>
@@ -117,7 +117,7 @@ export default function GameForm({
           value={dateTime}
           onChange={(e) => setDateTime(e.target.value)}
           required
-          className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+          className="mt-1 w-full rounded-lg border border-[var(--up-border-mid)] bg-[var(--up-surface-2)] px-3 py-2 text-[var(--up-text)]"
         />
       </div>
 
@@ -134,7 +134,7 @@ export default function GameForm({
           minLength={2}
           maxLength={120}
           required
-          className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+          className="mt-1 w-full rounded-lg border border-[var(--up-border-mid)] bg-[var(--up-surface-2)] px-3 py-2 text-[var(--up-text)] placeholder:text-[var(--up-muted)]"
         />
       </div>
 
@@ -146,7 +146,7 @@ export default function GameForm({
           id="skillLevel"
           value={skillLevel}
           onChange={(e) => setSkillLevel(e.target.value)}
-          className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+          className="mt-1 w-full rounded-lg border border-[var(--up-border-mid)] bg-[var(--up-surface-2)] px-3 py-2 text-[var(--up-text)]"
         >
           <option value="BEGINNER">Beginner</option>
           <option value="INTERMEDIATE">Intermediate</option>
@@ -166,14 +166,14 @@ export default function GameForm({
           min={2}
           max={200}
           required
-          className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+          className="mt-1 w-full rounded-lg border border-[var(--up-border-mid)] bg-[var(--up-surface-2)] px-3 py-2 text-[var(--up-text)]"
         />
       </div>
 
       <button
         type="submit"
         disabled={isLoading}
-        className="w-full rounded-lg bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+        className="w-full rounded-lg bg-[var(--up-accent)] px-4 py-2 font-medium text-[#0b0f1a] hover:bg-[var(--up-accent-dim)] disabled:opacity-50"
       >
         {isLoading ? "Saving..." : isEditing ? "Update Game" : "Create Game"}
       </button>

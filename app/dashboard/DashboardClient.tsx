@@ -26,14 +26,10 @@ const SPORT_EMOJI: Record<string, string> = {
 
 export function DashboardClient({
   userName,
-  userRole,
-  userID,
   stats,
   openGames,
 }: {
   userName: string;
-  userRole: string;
-  userID: string;
   stats: {
     gamesJoined: number;
     gamesHosted: number;
@@ -66,6 +62,8 @@ export function DashboardClient({
   const quickActions = [
     { href: "/profile", label: "Edit profile", icon: <UserIcon /> },
     { href: "/games", label: "Browse games", icon: <GamepadIcon /> },
+    { href: "/games/new", label: "Post a game", icon: <PlusIcon /> },
+    { href: "/games/manage", label: "My games", icon: <ListIcon /> },
     { href: "/dashboard", label: "Refresh dashboard", icon: <RefreshIcon /> },
   ];
 
@@ -87,29 +85,13 @@ export function DashboardClient({
         />
         <NavLink href="/games" icon={<GamepadIcon />} label="Browse games" />
         <NavLink href="/profile" icon={<UserIcon />} label="My profile" />
+        <NavLink href="/games/new" icon={<PlusIcon />} label="Post a game" />
+        <NavLink href="/games/manage" icon={<ListIcon />} label="My games" />
         <NavLink
           href="/notifications"
           icon={<BellIcon />}
           label="Notifications"
         />
-
-        {userRole === "ORGANIZER" ? (
-          <>
-            <p className="mb-2 mt-6 px-2 text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-[var(--up-muted)]">
-              Organizer
-            </p>
-            <NavLink
-              href="/games/new"
-              icon={<PlusIcon />}
-              label="Post a game"
-            />
-            <NavLink
-              href="/games/manage"
-              icon={<ListIcon />}
-              label="My games"
-            />
-          </>
-        ) : null}
 
         <div className="mt-auto border-t border-[var(--up-border)] px-2 pt-4">
           <div className="flex items-center gap-2.5">
@@ -119,9 +101,6 @@ export function DashboardClient({
             <div className="min-w-0">
               <p className="truncate text-[0.82rem] font-semibold">
                 {userName}
-              </p>
-              <p className="text-[0.68rem] text-[var(--up-muted)]">
-                {userRole.charAt(0) + userRole.slice(1).toLowerCase()}
               </p>
             </div>
           </div>
@@ -147,9 +126,8 @@ export function DashboardClient({
                   Hi, {userName}
                 </h1>
                 <p className="max-w-3xl text-sm leading-7 text-[var(--up-muted)] sm:text-base">
-                  You’re signed in as a {userRole.toLowerCase()} and can manage
-                  your profile, browse games, and keep track of your sports
-                  activity from this hub.
+                  Manage your profile, browse games, post new sessions, and
+                  keep track of your sports activity from this hub.
                 </p>
               </div>
 
@@ -264,31 +242,6 @@ export function DashboardClient({
                     </Link>
                   ))}
                 </div>
-              </section>
-
-              <section className="rounded-[28px] border border-[rgba(163,230,53,0.15)] bg-[var(--up-surface)] p-5 sm:p-6">
-                <div className="flex items-center gap-2.5">
-                  <TrophyIcon />
-                  <h3 className="font-[family:var(--font-display)] text-base font-bold tracking-tight">
-                    Complete your profile
-                  </h3>
-                </div>
-                <p className="mt-3 text-sm leading-7 text-[var(--up-muted)]">
-                  Add your sports and skill levels so others can find you for
-                  the right games.
-                </p>
-                <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-[var(--up-border-mid)]">
-                  <div className="h-full w-[30%] rounded-full bg-[var(--up-accent)]" />
-                </div>
-                <p className="mt-2 text-xs text-[var(--up-muted)]">
-                  Profile 30% complete
-                </p>
-                <Link
-                  href="/profile"
-                  className="mt-4 inline-flex h-10 items-center justify-center rounded-[10px] border border-[rgba(163,230,53,0.25)] bg-[var(--up-accent-bg)] px-4 text-sm font-bold text-[var(--up-accent)] transition hover:bg-[rgba(163,230,53,0.14)]"
-                >
-                  Set up profile
-                </Link>
               </section>
             </aside>
           </section>
@@ -551,27 +504,6 @@ function JoinIcon() {
       <circle cx="9" cy="7" r="4" />
       <line x1="19" y1="8" x2="19" y2="14" />
       <line x1="22" y1="11" x2="16" y2="11" />
-    </svg>
-  );
-}
-
-function TrophyIcon() {
-  return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <polyline points="8 21 12 17 16 21" />
-      <line x1="12" y1="17" x2="12" y2="11" />
-      <path d="M17 4H7l1 8a4 4 0 0 0 8 0l1-8z" />
-      <path d="M17 4c1.5 0 3.5 1 3.5 5s-2 5-3.5 5" />
-      <path d="M7 4C5.5 4 3.5 5 3.5 9s2 5 3.5 5" />
     </svg>
   );
 }
