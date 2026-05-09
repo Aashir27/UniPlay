@@ -54,15 +54,15 @@ export default function ManageGamesClient({ games }: ManageGamesClientProps) {
 
   const statusBadge = (status: string) => {
     const styles: Record<string, string> = {
-      DRAFT: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200",
-      OPEN: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
-      FULL: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
-      CANCELLED: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
-      COMPLETED: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
+      DRAFT: "border border-[var(--up-border-mid)] bg-[var(--up-surface-2)] text-[var(--up-muted)]",
+      OPEN: "border border-[rgba(163,230,53,0.25)] bg-[var(--up-accent-bg)] text-[var(--up-accent)]",
+      FULL: "border border-[var(--up-border-mid)] bg-[var(--up-surface-2)] text-[var(--up-muted)]",
+      CANCELLED: "border border-[rgba(248,113,113,0.2)] bg-[var(--up-danger-bg)] text-[var(--up-danger)]",
+      COMPLETED: "border border-[var(--up-border-mid)] bg-[var(--up-surface-2)] text-[var(--up-muted)]",
     };
     return (
       <span
-        className={`inline-block rounded-full px-3 py-1 text-xs font-semibold ${styles[status] ?? "bg-gray-100 text-gray-800"}`}
+        className={`inline-block rounded-full px-3 py-1 text-xs font-semibold ${styles[status] ?? styles.DRAFT}`}
       >
         {status}
       </span>
@@ -75,7 +75,7 @@ export default function ManageGamesClient({ games }: ManageGamesClientProps) {
   return (
     <div className="space-y-4">
       {error && (
-        <div className="rounded-lg bg-red-50 p-4 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400">
+        <div className="rounded-[10px] border border-[rgba(248,113,113,0.18)] bg-[var(--up-danger-bg)] p-4 text-sm text-[var(--up-danger)]">
           {error}
         </div>
       )}
@@ -88,17 +88,17 @@ export default function ManageGamesClient({ games }: ManageGamesClientProps) {
           return (
             <div
               key={game.gameID}
-              className="flex flex-col gap-3 rounded-lg border border-zinc-200 p-4 dark:border-zinc-800 sm:flex-row sm:items-center sm:justify-between"
+              className="flex flex-col gap-3 rounded-[20px] border border-[var(--up-border)] bg-[var(--up-surface)] p-4 sm:flex-row sm:items-center sm:justify-between"
             >
               <div className="flex-1">
                 <div className="flex items-center gap-3">
                   <h3 className="font-semibold">{game.sport}</h3>
                   {statusBadge(game.status)}
                 </div>
-                <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+                <p className="mt-1 text-sm text-[var(--up-muted)]">
                   {new Date(game.dateTime).toLocaleString()} • {game.location}
                 </p>
-                <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-500">
+                <p className="mt-1 text-xs text-[var(--up-muted)]">
                   {game.currentCount}/{game.maxParticipants} participants
                 </p>
               </div>
@@ -107,14 +107,14 @@ export default function ManageGamesClient({ games }: ManageGamesClientProps) {
                 <div className="flex gap-2">
                   <Link
                     href={`/games/${game.gameID}/edit`}
-                    className="rounded-lg border border-zinc-300 px-3 py-2 text-sm font-medium hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-900"
+                    className="rounded-[10px] border border-[var(--up-border-mid)] px-3 py-2 text-sm font-medium text-[var(--up-text)] transition hover:bg-[var(--up-accent-bg)] hover:text-[var(--up-accent)]"
                   >
                     Edit
                   </Link>
                   <button
                     onClick={() => handleComplete(game.gameID)}
                     disabled={busy}
-                    className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                    className="rounded-[10px] bg-[var(--up-accent)] px-3 py-2 text-sm font-medium text-[#0b0f1a] transition hover:bg-[var(--up-accent-dim)] disabled:opacity-50"
                   >
                     {actionLoading === game.gameID + "COMPLETED"
                       ? "Saving..."
@@ -123,7 +123,7 @@ export default function ManageGamesClient({ games }: ManageGamesClientProps) {
                   <button
                     onClick={() => handleCancel(game.gameID)}
                     disabled={busy}
-                    className="rounded-lg bg-orange-600 px-3 py-2 text-sm font-medium text-white hover:bg-orange-700 disabled:opacity-50"
+                    className="rounded-[10px] border border-[rgba(248,113,113,0.25)] px-3 py-2 text-sm font-medium text-[var(--up-danger)] transition hover:bg-[var(--up-danger-bg)] disabled:opacity-50"
                   >
                     {actionLoading === game.gameID + "CANCELLED"
                       ? "Cancelling..."

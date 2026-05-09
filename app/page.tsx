@@ -28,7 +28,7 @@ export default async function HomePage() {
               </h1>
               <p className="max-w-2xl text-sm leading-7 text-[var(--up-muted)] sm:text-base">
                 Discover university sports games, join with your skill level,
-                and stay connected with organizers — all in one place.
+                and stay connected with other players in one place.
               </p>
             </div>
 

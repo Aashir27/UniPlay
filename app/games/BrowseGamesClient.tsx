@@ -4,6 +4,7 @@ import { useState, useMemo, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Game } from "@prisma/client";
+import { Select } from "@/src/components/ui/Select";
 
 interface BrowseGamesClientProps {
   initialGames: Game[];
@@ -141,9 +142,9 @@ export default function BrowseGamesClient({
     <div className="space-y-6">
       {/* Keyword search */}
       <div ref={searchRef} className="relative">
-        <div className="flex items-center rounded-lg border border-zinc-300 bg-white px-3 py-2 focus-within:border-blue-500 dark:border-zinc-700 dark:bg-zinc-900">
+        <div className="flex items-center rounded-lg border border-[var(--up-border-mid)] bg-[var(--up-surface)] px-3 py-2 focus-within:border-[rgba(163,230,53,0.45)]">
           <svg
-            className="mr-2 h-4 w-4 shrink-0 text-zinc-400"
+            className="mr-2 h-4 w-4 shrink-0 text-[var(--up-muted)]"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -156,7 +157,7 @@ export default function BrowseGamesClient({
             type="text"
             value={keyword}
             placeholder="Search by sport, location, or skill level…"
-            className="flex-1 bg-transparent text-sm outline-none placeholder:text-zinc-400"
+            className="flex-1 bg-transparent text-sm text-[var(--up-text)] outline-none placeholder:text-[var(--up-muted)]"
             onChange={(e) => {
               setKeyword(e.target.value);
               setActiveIdx(-1);
@@ -171,7 +172,7 @@ export default function BrowseGamesClient({
             <button
               onClick={clearKeyword}
               aria-label="Clear search"
-              className="ml-2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
+              className="ml-2 text-[var(--up-muted)] hover:text-[var(--up-text)]"
             >
               <svg
                 className="h-4 w-4"
@@ -187,9 +188,9 @@ export default function BrowseGamesClient({
         </div>
 
         {showDropdown && keyword.trim() && (
-          <div className="absolute z-10 mt-1 w-full rounded-lg border border-zinc-200 bg-white shadow-lg dark:border-zinc-700 dark:bg-zinc-900">
+          <div className="absolute z-10 mt-1 w-full rounded-lg border border-[var(--up-border)] bg-[var(--up-surface)] shadow-2xl shadow-black/20">
             {suggestions.length === 0 ? (
-              <p className="px-4 py-3 text-sm text-zinc-500 dark:text-zinc-400">
+              <p className="px-4 py-3 text-sm text-[var(--up-muted)]">
                 No games match your search.
               </p>
             ) : (
@@ -199,9 +200,9 @@ export default function BrowseGamesClient({
                   return (
                     <li key={game.gameID}>
                       <button
-                        className={`flex w-full items-center justify-between px-4 py-3 text-left text-sm transition hover:bg-zinc-50 dark:hover:bg-zinc-800 ${
-                          idx === activeIdx ? "bg-blue-50 dark:bg-zinc-800" : ""
-                        } ${idx !== suggestions.length - 1 ? "border-b border-zinc-100 dark:border-zinc-800" : ""}`}
+                        className={`flex w-full items-center justify-between px-4 py-3 text-left text-sm transition hover:bg-[var(--up-accent-bg)] ${
+                          idx === activeIdx ? "bg-[var(--up-accent-bg)]" : ""
+                        } ${idx !== suggestions.length - 1 ? "border-b border-[var(--up-border)]" : ""}`}
                         onMouseDown={(e) => e.preventDefault()}
                         onClick={() => {
                           router.push(`/games/${game.gameID}`);
@@ -210,25 +211,25 @@ export default function BrowseGamesClient({
                         onMouseEnter={() => setActiveIdx(idx)}
                       >
                         <div className="min-w-0">
-                          <span className="font-medium text-zinc-900 dark:text-zinc-100">
+                          <span className="font-medium text-[var(--up-text)]">
                             {game.sport}
                           </span>
-                          <span className="mx-1 text-zinc-300 dark:text-zinc-600">
+                          <span className="mx-1 text-[var(--up-muted)]">
                             ·
                           </span>
-                          <span className="truncate text-zinc-500 dark:text-zinc-400">
+                          <span className="truncate text-[var(--up-muted)]">
                             {game.location}
                           </span>
                         </div>
                         <div className="ml-4 flex shrink-0 items-center gap-2">
-                          <span className="text-xs text-zinc-400">
+                          <span className="text-xs text-[var(--up-muted)]">
                             {game.currentCount}/{game.maxParticipants}
                           </span>
                           <span
                             className={`rounded px-1.5 py-0.5 text-xs font-medium ${
                               isFull
-                                ? "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300"
-                                : "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300"
+                                ? "border border-[var(--up-border-mid)] bg-[var(--up-surface-2)] text-[var(--up-muted)]"
+                                : "border border-[rgba(163,230,53,0.25)] bg-[var(--up-accent-bg)] text-[var(--up-accent)]"
                             }`}
                           >
                             {isFull ? "Full" : "Open"}
@@ -245,44 +246,45 @@ export default function BrowseGamesClient({
       </div>
 
       {/* Filters */}
-      <div className="rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
+      <div className="rounded-lg border border-[var(--up-border)] bg-[var(--up-surface)] p-4">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <div>
             <label htmlFor="sport" className="block text-sm font-medium">
               Sport
             </label>
-            <select
+            <Select
               id="sport"
               value={sportFilter}
-              onChange={(e) => setSportFilter(e.target.value)}
-              className="mt-2 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
-            >
-              <option value="">All Sports</option>
-              {sports.map((sport) => (
-                <option key={sport} value={sport}>
-                  {sport}
-                </option>
-              ))}
-            </select>
+              onChange={setSportFilter}
+              options={[
+                { value: "", label: "All Sports" },
+                ...sports.map((sport) => ({ value: sport, label: sport })),
+              ]}
+              className="mt-2"
+              buttonClassName="text-sm"
+              listClassName="text-sm"
+            />
           </div>
 
           <div>
             <label htmlFor="skillLevel" className="block text-sm font-medium">
               Skill Level
             </label>
-            <select
+            <Select
               id="skillLevel"
               value={skillFilter}
-              onChange={(e) => setSkillFilter(e.target.value)}
-              className="mt-2 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
-            >
-              <option value="">All Levels</option>
-              {skillLevels.map((level) => (
-                <option key={level} value={level}>
-                  {skillLabel(level)}
-                </option>
-              ))}
-            </select>
+              onChange={setSkillFilter}
+              options={[
+                { value: "", label: "All Levels" },
+                ...skillLevels.map((level) => ({
+                  value: level,
+                  label: skillLabel(level),
+                })),
+              ]}
+              className="mt-2"
+              buttonClassName="text-sm"
+              listClassName="text-sm"
+            />
           </div>
 
           <div>
@@ -295,7 +297,7 @@ export default function BrowseGamesClient({
               value={locationFilter}
               onChange={(e) => setLocationFilter(e.target.value)}
               placeholder="e.g. Court 3"
-              className="mt-2 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900 placeholder:text-zinc-400"
+              className="mt-2 w-full rounded-lg border border-[var(--up-border-mid)] bg-[var(--up-surface-2)] px-3 py-2 text-sm text-[var(--up-text)] placeholder:text-[var(--up-muted)]"
             />
           </div>
 
@@ -308,7 +310,7 @@ export default function BrowseGamesClient({
               type="date"
               value={dateFilter}
               onChange={(e) => setDateFilter(e.target.value)}
-              className="mt-2 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+              className="mt-2 w-full rounded-lg border border-[var(--up-border-mid)] bg-[var(--up-surface-2)] px-3 py-2 text-sm text-[var(--up-text)]"
             />
           </div>
         </div>
@@ -316,7 +318,7 @@ export default function BrowseGamesClient({
         {hasActiveFilters && (
           <button
             onClick={clearAllFilters}
-            className="mt-4 text-sm text-blue-600 hover:underline dark:text-blue-400"
+            className="mt-4 text-sm text-[var(--up-accent)] hover:underline"
           >
             Clear all filters
           </button>
@@ -325,14 +327,14 @@ export default function BrowseGamesClient({
 
       {/* Results */}
       {filteredGames.length === 0 ? (
-        <div className="rounded-lg border border-zinc-200 p-8 text-center dark:border-zinc-800">
-          <p className="text-zinc-600 dark:text-zinc-400">
+        <div className="rounded-lg border border-[var(--up-border)] bg-[var(--up-surface)] p-8 text-center">
+          <p className="text-[var(--up-muted)]">
             No games match your filters.
           </p>
           {hasActiveFilters && (
             <button
               onClick={clearAllFilters}
-              className="mt-3 text-sm text-blue-600 hover:underline dark:text-blue-400"
+              className="mt-3 text-sm text-[var(--up-accent)] hover:underline"
             >
               Clear filters
             </button>
@@ -346,27 +348,27 @@ export default function BrowseGamesClient({
               <Link
                 key={game.gameID}
                 href={`/games/${game.gameID}`}
-                className="group rounded-lg border border-zinc-200 p-4 transition hover:border-blue-500 hover:bg-blue-50 dark:border-zinc-800 dark:hover:bg-zinc-900"
+                className="group rounded-lg border border-[var(--up-border)] bg-[var(--up-surface)] p-4 transition hover:border-[rgba(163,230,53,0.35)] hover:bg-[var(--up-accent-bg)]"
               >
                 <div className="flex items-center justify-between">
-                  <h3 className="font-semibold group-hover:text-blue-600">
+                  <h3 className="font-semibold group-hover:text-[var(--up-accent)]">
                     {game.sport}
                   </h3>
                   <span
                     className={`rounded px-2 py-1 text-xs font-medium ${
                       isFull
-                        ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-200"
-                        : "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200"
+                        ? "border border-[var(--up-border-mid)] bg-[var(--up-surface-2)] text-[var(--up-muted)]"
+                        : "border border-[rgba(163,230,53,0.25)] bg-[var(--up-accent-bg)] text-[var(--up-accent)]"
                     }`}
                   >
                     {isFull ? "Full" : "Open"}
                   </span>
                 </div>
-                <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+                <p className="mt-1 text-sm text-[var(--up-muted)]">
                   {new Date(game.dateTime).toLocaleString()}
                 </p>
-                <p className="mt-1 text-xs text-zinc-500">{game.location}</p>
-                <div className="mt-3 flex items-center justify-between text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                <p className="mt-1 text-xs text-[var(--up-muted)]">{game.location}</p>
+                <div className="mt-3 flex items-center justify-between text-xs font-medium text-[var(--up-muted)]">
                   <span>{game.currentCount}/{game.maxParticipants} participants</span>
                   <span>{skillLabel(game.skillLevel)}</span>
                 </div>

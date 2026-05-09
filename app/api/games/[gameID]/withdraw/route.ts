@@ -20,25 +20,18 @@ export async function POST(
 
   const game = await prisma.game.findUnique({
     where: { gameID },
-    select: { creatorID: true },
+    select: { gameID: true },
   });
 
   if (!game) {
     return NextResponse.json({ error: "Game not found" }, { status: 404 });
   }
 
-  if (game.creatorID === userID) {
-    return NextResponse.json(
-      { error: "The game creator cannot withdraw" },
-      { status: 400 },
-    );
-  }
-
   try {
     await cancelParticipation({ userID, gameID });
   } catch (err: unknown) {
     const message =
-      err instanceof Error ? err.message : "Failed to withdraw from game";
+      err instanceof Error ? err.message : "Failed to leave game";
     return NextResponse.json({ error: message }, { status: 400 });
   }
 

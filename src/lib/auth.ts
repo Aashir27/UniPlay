@@ -5,13 +5,12 @@
  *
  * Changes from baseline:
  *  - Delegates credential validation to auth.service.ts (DRY, testable)
- *  - Adds `jwt` callback to persist userID + role in the JWT token
- *  - Adds `session` callback to expose userID + role on the client session
+ *  - Adds `jwt` callback to persist userID in the JWT token
+ *  - Adds `session` callback to expose userID on the client session
  *  - Adds `pages` config to point at custom auth pages (create these in Sprint 1 UI)
  *
  * Session shape (client-visible):
  *   session.user.id   → userID (UUID)
- *   session.user.role → Role enum value
  *   session.user.name → string
  *   session.user.email → string
  */
@@ -21,7 +20,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 
 import { login } from "@/src/services/auth.service";
 
-// Extend next-auth types to include id and role
+// Extend next-auth types to include id.
 declare module "next-auth" {
   interface Session {
     user: {
@@ -29,18 +28,13 @@ declare module "next-auth" {
       name?: string | null;
       email?: string | null;
       image?: string | null;
-      role: string;
     };
-  }
-  interface User {
-    role: string;
   }
 }
 
 declare module "next-auth/jwt" {
   interface JWT {
     id: string;
-    role: string;
   }
 }
 
@@ -83,7 +77,6 @@ export const authOptions: NextAuthOptions = {
           id: user.userID,
           name: user.name,
           email: user.email,
-          role: user.role,
         };
       },
     }),
@@ -92,16 +85,16 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       // `user` is only present on the initial sign-in
-      if (user) {
+      if (user?.id) {
         token.id = user.id;
-        token.role = user.role;
       }
       return token;
     },
 
     async session({ session, token }) {
-      session.user.id = token.id;
-      session.user.role = token.role;
+      if (typeof token.id === "string") {
+        session.user.id = token.id;
+      }
       return session;
     },
   },

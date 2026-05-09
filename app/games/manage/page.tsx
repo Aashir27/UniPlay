@@ -19,27 +19,27 @@ export default async function ManageGamesPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">My Games</h1>
-          <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-            Manage the games you've created. Edit details, cancel games, or view
+          <p className="mt-2 text-sm text-[var(--up-muted)]">
+            Manage the games you&apos;ve created. Edit details, cancel games, or view
             participant info.
           </p>
         </div>
         <Link
           href="/dashboard"
-          className="rounded-lg border border-zinc-300 px-4 py-2 font-medium hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-900"
+          className="rounded-[10px] border border-[var(--up-border-mid)] px-4 py-2 font-medium text-[var(--up-text)] transition hover:border-[rgba(163,230,53,0.25)] hover:bg-[var(--up-accent-bg)] hover:text-[var(--up-accent)]"
         >
           Back to Dashboard
         </Link>
       </div>
 
       {games.length === 0 ? (
-        <div className="rounded-lg border border-zinc-200 p-8 text-center dark:border-zinc-800">
-          <p className="text-zinc-600 dark:text-zinc-400">
-            You haven't created any games yet.
+        <div className="rounded-[20px] border border-[var(--up-border)] bg-[var(--up-surface)] p-8 text-center">
+          <p className="text-[var(--up-muted)]">
+            You haven&apos;t created any games yet.
           </p>
           <Link
             href="/games/new"
-            className="mt-4 inline-block rounded-lg bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700"
+            className="mt-4 inline-block rounded-[10px] bg-[var(--up-accent)] px-4 py-2 font-medium text-[#0b0f1a] transition hover:bg-[var(--up-accent-dim)]"
           >
             Post a Game
           </Link>

@@ -31,7 +31,7 @@ export default async function ViewGamePage({
     return (
       <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-4 px-6 py-10">
         <h1 className="text-3xl font-bold">Game not found</h1>
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">
+        <p className="text-sm text-[var(--up-muted)]">
           The game you&apos;re looking for doesn&apos;t exist.
         </p>
       </main>
@@ -40,19 +40,17 @@ export default async function ViewGamePage({
 
   const session = await getServerSession(authOptions);
   const currentUserID = session?.user?.id ?? null;
-  const currentUserRole = session?.user?.role ?? null;
   const isCreator = currentUserID === game.creatorID;
   const hasJoined =
     currentUserID !== null &&
     game.participations.some((p) => p.userID === currentUserID);
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-6 py-10">
+    <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 px-6 py-10">
       <ViewGameClient
         game={game}
         isCreator={isCreator}
         currentUserID={currentUserID}
-        currentUserRole={currentUserRole}
         hasJoined={hasJoined}
       />
     </main>

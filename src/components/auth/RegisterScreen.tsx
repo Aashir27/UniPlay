@@ -14,7 +14,6 @@ export function RegisterScreen() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("STUDENT");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPass, setShowPass] = useState(false);
@@ -27,7 +26,7 @@ export function RegisterScreen() {
     const res = await fetch("/api/auth/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, password, role }),
+      body: JSON.stringify({ name, email, password }),
     });
 
     const data = (await res.json()) as RegisterResponse;
@@ -56,7 +55,7 @@ export function RegisterScreen() {
           </h2>
           <p className="max-w-md text-sm leading-7 text-[var(--up-muted)]">
             Register with your university email to join a verified community of
-            student athletes.
+            university athletes.
           </p>
         </div>
 
@@ -80,7 +79,7 @@ export function RegisterScreen() {
             Create your account
           </h1>
           <p className="mt-3 text-sm leading-7 text-[var(--up-muted)]">
-            Use your university email and set up your student or organizer role.
+            Use your university email to join a verified sports community.
           </p>
 
           <form onSubmit={onSubmit} className="mt-6 space-y-4">
@@ -128,25 +127,6 @@ export function RegisterScreen() {
                 </button>
               </div>
               {password ? <StrengthBar strength={strength} /> : null}
-            </Field>
-
-            <Field label="I am joining as">
-              <div className="grid grid-cols-2 gap-2">
-                {(["STUDENT", "ORGANIZER"] as const).map((r) => (
-                  <button
-                    key={r}
-                    type="button"
-                    onClick={() => setRole(r)}
-                    className={`h-11 rounded-[10px] border text-sm font-medium transition ${
-                      role === r
-                        ? "border-[rgba(163,230,53,0.4)] bg-[var(--up-accent-bg)] text-[var(--up-accent)]"
-                        : "border-[var(--up-border-mid)] bg-[var(--up-surface)] text-[var(--up-muted)] hover:text-[var(--up-text)]"
-                    }`}
-                  >
-                    {r === "STUDENT" ? "🎓 Student" : "📋 Organizer"}
-                  </button>
-                ))}
-              </div>
             </Field>
 
             {error ? (

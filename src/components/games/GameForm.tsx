@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Select } from "@/src/components/ui/Select";
 
 interface GameFormProps {
   gameID?: string;
@@ -41,6 +42,12 @@ export default function GameForm({
     setIsLoading(true);
     setError(null);
 
+    if (!sport.trim()) {
+      setError("Please select a sport.");
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const payload = {
         sport: sport.trim(),
@@ -78,10 +85,10 @@ export default function GameForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="space-y-6 rounded-lg border border-zinc-200 p-6 dark:border-zinc-800"
+      className="space-y-6 rounded-lg border border-[var(--up-border)] bg-[var(--up-surface)] p-6"
     >
       {error && (
-        <div className="rounded-lg bg-red-50 p-4 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400">
+        <div className="rounded-lg border border-[rgba(248,113,113,0.18)] bg-[var(--up-danger-bg)] p-4 text-sm text-[var(--up-danger)]">
           {error}
         </div>
       )}
@@ -90,21 +97,21 @@ export default function GameForm({
         <label htmlFor="sport" className="block text-sm font-medium">
           Sport
         </label>
-        <select
+        <Select
           id="sport"
           value={sport}
-          onChange={(e) => setSport(e.target.value)}
-          required
-          className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
-        >
-          <option value="">Select a sport</option>
-          <option value="Cricket">Cricket</option>
-          <option value="Football">Football</option>
-          <option value="Basketball">Basketball</option>
-          <option value="Tennis">Tennis</option>
-          <option value="Volleyball">Volleyball</option>
-          <option value="Table Tennis">Table Tennis</option>
-        </select>
+          onChange={setSport}
+          options={[
+            { value: "", label: "Select a sport" },
+            { value: "Cricket", label: "Cricket" },
+            { value: "Football", label: "Football" },
+            { value: "Basketball", label: "Basketball" },
+            { value: "Tennis", label: "Tennis" },
+            { value: "Volleyball", label: "Volleyball" },
+            { value: "Table Tennis", label: "Table Tennis" },
+          ]}
+          className="mt-1"
+        />
       </div>
 
       <div>
@@ -117,7 +124,7 @@ export default function GameForm({
           value={dateTime}
           onChange={(e) => setDateTime(e.target.value)}
           required
-          className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+          className="mt-1 w-full rounded-lg border border-[var(--up-border-mid)] bg-[var(--up-surface-2)] px-3 py-2 text-[var(--up-text)]"
         />
       </div>
 
@@ -134,7 +141,7 @@ export default function GameForm({
           minLength={2}
           maxLength={120}
           required
-          className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+          className="mt-1 w-full rounded-lg border border-[var(--up-border-mid)] bg-[var(--up-surface-2)] px-3 py-2 text-[var(--up-text)] placeholder:text-[var(--up-muted)]"
         />
       </div>
 
@@ -142,16 +149,17 @@ export default function GameForm({
         <label htmlFor="skillLevel" className="block text-sm font-medium">
           Skill Level
         </label>
-        <select
+        <Select
           id="skillLevel"
           value={skillLevel}
-          onChange={(e) => setSkillLevel(e.target.value)}
-          className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
-        >
-          <option value="BEGINNER">Beginner</option>
-          <option value="INTERMEDIATE">Intermediate</option>
-          <option value="ADVANCED">Advanced</option>
-        </select>
+          onChange={setSkillLevel}
+          options={[
+            { value: "BEGINNER", label: "Beginner" },
+            { value: "INTERMEDIATE", label: "Intermediate" },
+            { value: "ADVANCED", label: "Advanced" },
+          ]}
+          className="mt-1"
+        />
       </div>
 
       <div>
@@ -166,14 +174,14 @@ export default function GameForm({
           min={2}
           max={200}
           required
-          className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+          className="mt-1 w-full rounded-lg border border-[var(--up-border-mid)] bg-[var(--up-surface-2)] px-3 py-2 text-[var(--up-text)]"
         />
       </div>
 
       <button
         type="submit"
         disabled={isLoading}
-        className="w-full rounded-lg bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+        className="w-full rounded-lg bg-[var(--up-accent)] px-4 py-2 font-medium text-[#0b0f1a] hover:bg-[var(--up-accent-dim)] disabled:opacity-50"
       >
         {isLoading ? "Saving..." : isEditing ? "Update Game" : "Create Game"}
       </button>
