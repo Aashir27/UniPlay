@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { Select } from "@/src/components/ui/Select";
 import { UserRow } from "@/src/components/users/UserRow";
+import { GameSelectionModal } from "@/src/components/games/GameSelectionModal";
 
 type SportProfile = {
   sport: string;
@@ -40,6 +41,10 @@ export function InvitePlayersClient() {
   const [sportFilter, setSportFilter] = useState("");
   const [skillFilter, setSkillFilter] = useState("");
   const [selectedUserID, setSelectedUserID] = useState<string | null>(null);
+  const [inviteModalUserID, setInviteModalUserID] = useState<string | null>(
+    null,
+  );
+  const [isSendingInvite, setIsSendingInvite] = useState(false);
 
   useEffect(() => {
     async function loadUsers() {
@@ -58,6 +63,32 @@ export function InvitePlayersClient() {
 
     void loadUsers();
   }, []);
+
+  const handleInvitePlayer = async (gameID: string) => {
+    if (!inviteModalUserID) return;
+
+    setIsSendingInvite(true);
+    try {
+      const res = await fetch(`/api/games/${gameID}/invite`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ targetUserID: inviteModalUserID }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        alert(data.error ?? "Failed to send invite");
+        return;
+      }
+
+      alert("Invite sent!");
+      setInviteModalUserID(null);
+    } catch {
+      alert("Failed to send invite");
+    } finally {
+      setIsSendingInvite(false);
+    }
+  };
 
   const filteredUsers = useMemo(() => {
     return users.filter((user) => {
@@ -105,17 +136,27 @@ export function InvitePlayersClient() {
   }
 
   return (
-    <AllUsersView
-      users={filteredUsers}
-      search={search}
-      onSearchChange={setSearch}
-      sportFilter={sportFilter}
-      onSportFilterChange={setSportFilter}
-      skillFilter={skillFilter}
-      onSkillFilterChange={setSkillFilter}
-      onViewProfile={setSelectedUserID}
-      error={error}
-    />
+    <>
+      <AllUsersView
+        users={filteredUsers}
+        search={search}
+        onSearchChange={setSearch}
+        sportFilter={sportFilter}
+        onSportFilterChange={setSportFilter}
+        skillFilter={skillFilter}
+        onSkillFilterChange={setSkillFilter}
+        onViewProfile={setSelectedUserID}
+        onInvite={setInviteModalUserID}
+        error={error}
+      />
+      {inviteModalUserID && (
+        <GameSelectionModal
+          onClose={() => setInviteModalUserID(null)}
+          onSelect={handleInvitePlayer}
+          isLoading={isSendingInvite}
+        />
+      )}
+    </>
   );
 }
 
@@ -128,6 +169,7 @@ function AllUsersView({
   skillFilter,
   onSkillFilterChange,
   onViewProfile,
+  onInvite,
   error,
 }: {
   users: User[];
@@ -138,6 +180,7 @@ function AllUsersView({
   skillFilter: string;
   onSkillFilterChange: (value: string) => void;
   onViewProfile: (userID: string) => void;
+  onInvite: (userID: string) => void;
   error: string | null;
 }) {
   return (
@@ -208,6 +251,7 @@ function AllUsersView({
                 sportCount: user.sportProfiles.length,
               }}
               onViewProfile={onViewProfile}
+              onInvite={onInvite}
             />
           ))}
         </ul>

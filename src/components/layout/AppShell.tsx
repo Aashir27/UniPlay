@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { useState, useEffect, useRef, useCallback } from "react";
+import { NotificationCard } from "@/src/components/notifications/NotificationCard";
 
 type AppShellProps = {
   children: React.ReactNode;
@@ -16,6 +17,7 @@ type NotificationItem = {
   message: string;
   isRead: boolean;
   createdAt: string;
+  relatedGameID?: string;
 };
 
 const navItems = [
@@ -234,9 +236,20 @@ export function AppShell({ children, userName }: AppShellProps) {
                 No notifications
               </p>
             ) : (
-              notifications.map((n) => (
-                <NotifRow key={n.notifID} notification={n} />
-              ))
+              <div className="divide-y divide-[var(--up-border)]">
+                {notifications.map((n) => (
+                  <div key={n.notifID} className="p-4 last:border-0">
+                    {n.type === "GAME_INVITE" ? (
+                      <NotificationCardWrapper
+                        notification={n}
+                        onActionComplete={() => fetchNotifications()}
+                      />
+                    ) : (
+                      <NotifRow notification={n} />
+                    )}
+                  </div>
+                ))}
+              </div>
             )}
           </div>
         </div>
@@ -244,6 +257,63 @@ export function AppShell({ children, userName }: AppShellProps) {
 
       <div className="min-w-0 flex-1">{children}</div>
     </div>
+  );
+}
+
+function NotificationCardWrapper({
+  notification,
+  onActionComplete,
+}: {
+  notification: NotificationItem;
+  onActionComplete: () => void;
+}) {
+  const [game, setGame] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!notification.relatedGameID) {
+      setLoading(false);
+      return;
+    }
+
+    async function fetchGame() {
+      try {
+        const res = await fetch(
+          `/api/games/${notification.relatedGameID}/details`,
+        );
+        if (res.ok) {
+          const data = await res.json();
+          setGame(data.game);
+        }
+      } catch {
+        // silently fail
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    void fetchGame();
+  }, [notification.relatedGameID]);
+
+  if (loading) {
+    return <NotifRow notification={notification} />;
+  }
+
+  return (
+    <NotificationCard
+      notification={notification}
+      game={
+        game
+          ? {
+              sport: game.sport,
+              dateTime: game.dateTime,
+              location: game.location,
+              skillLevel: game.skillLevel,
+            }
+          : undefined
+      }
+      onActionComplete={onActionComplete}
+    />
   );
 }
 
@@ -282,6 +352,8 @@ function notifIcon(type: string): string {
       return "❌";
     case "REMINDER":
       return "⏰";
+    case "GAME_INVITE":
+      return "📨";
     default:
       return "🔔";
   }
