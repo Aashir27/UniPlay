@@ -22,7 +22,6 @@ export default async function NewGamePage() {
       </div>
 
       <GameForm />
-
     </main>
   );
 }

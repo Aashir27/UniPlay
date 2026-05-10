@@ -61,7 +61,7 @@ export function AppShell({ children, userName }: AppShellProps) {
   useEffect(() => {
     if (!userName) return;
     fetchNotifications();
-    const id = setInterval(fetchNotifications, 60_000);
+    const id = setInterval(fetchNotifications, 5_000);
     return () => clearInterval(id);
   }, [userName, fetchNotifications]);
 
@@ -207,7 +207,7 @@ export function AppShell({ children, userName }: AppShellProps) {
       {notifOpen && (
         <div
           ref={panelRef}
-          className="fixed z-50 w-[320px] overflow-hidden rounded-[16px] border border-[var(--up-border)] bg-[var(--up-surface)] shadow-2xl shadow-black/40"
+          className="fixed z-50 flex max-h-[calc(100vh-24px)] w-[320px] flex-col overflow-hidden rounded-[16px] border border-[var(--up-border)] bg-[var(--up-surface)] shadow-2xl shadow-black/40"
           style={{ left: "228px", top: `${panelTop}px` }}
         >
           {/* Header */}
@@ -224,7 +224,7 @@ export function AppShell({ children, userName }: AppShellProps) {
           </div>
 
           {/* List */}
-          <div className="max-h-[420px] overflow-y-auto">
+          <div className="max-h-[120px] overflow-y-auto">
             {notifLoading && count === 0 ? (
               <p className="py-10 text-center text-xs text-[var(--up-muted)]">
                 Loading…

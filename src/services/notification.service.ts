@@ -2,6 +2,7 @@ import type { Notification, PrismaClient } from "@prisma/client";
 import { NotificationType, Prisma } from "@prisma/client";
 
 import { prisma } from "@/src/lib/prisma";
+import { formatSportEvent } from "@/src/lib/formatSport";
 
 export interface CreateNotificationInput {
   recipientID: string;
@@ -75,6 +76,19 @@ export async function checkAndCreateReminders(
 ): Promise<void> {
   const now = new Date();
 
+  await db.notification.updateMany({
+    where: {
+      recipientID: userID,
+      type: NotificationType.REMINDER,
+      isRead: false,
+      OR: [
+        { game: { dateTime: { lt: now } } },
+        { game: { status: { in: ["CANCELLED", "COMPLETED"] } } },
+      ],
+    },
+    data: { isRead: true },
+  });
+
   // 3-day window: game is between 60h and 84h from now
   const window3Low = new Date(now.getTime() + 60 * 60 * 60 * 1000);
   const window3High = new Date(now.getTime() + 84 * 60 * 60 * 1000);
@@ -82,6 +96,10 @@ export async function checkAndCreateReminders(
   // 1-day window: game is between 12h and 36h from now
   const window1Low = new Date(now.getTime() + 12 * 60 * 60 * 1000);
   const window1High = new Date(now.getTime() + 36 * 60 * 60 * 1000);
+
+  // Soon window: game is within the next 2 hours
+  const windowSoonLow = now;
+  const windowSoonHigh = new Date(now.getTime() + 2 * 60 * 60 * 1000);
 
   const participations = await db.participation.findMany({
     where: {
@@ -97,6 +115,9 @@ export async function checkAndCreateReminders(
   for (const p of participations) {
     const game = p.game;
     const gameTime = game.dateTime;
+    if (gameTime.getTime() <= now.getTime()) continue;
+
+    const eventLabel = formatSportEvent(game.sport);
 
     const dateLabel = gameTime.toLocaleDateString("en-US", {
       weekday: "long",
@@ -125,7 +146,7 @@ export async function checkAndCreateReminders(
           data: {
             recipientID: userID,
             type: NotificationType.REMINDER,
-            message: `Reminder: Your ${game.sport} game at ${game.location} is in 3 days (${dateLabel}).`,
+            message: `Reminder: Your ${eventLabel} at ${game.location} is in 3 days (${dateLabel}).`,
             relatedGameID: game.gameID,
           },
         });
@@ -147,7 +168,29 @@ export async function checkAndCreateReminders(
           data: {
             recipientID: userID,
             type: NotificationType.REMINDER,
-            message: `Reminder: Your ${game.sport} game at ${game.location} is tomorrow (${dateLabel}).`,
+            message: `Reminder: Your ${eventLabel} at ${game.location} is tomorrow (${dateLabel}).`,
+            relatedGameID: game.gameID,
+          },
+        });
+      }
+    }
+
+    // Soon reminder
+    if (gameTime > windowSoonLow && gameTime <= windowSoonHigh) {
+      const already = await db.notification.findFirst({
+        where: {
+          recipientID: userID,
+          relatedGameID: game.gameID,
+          type: NotificationType.REMINDER,
+          message: { contains: "starts soon" },
+        },
+      });
+      if (!already) {
+        await db.notification.create({
+          data: {
+            recipientID: userID,
+            type: NotificationType.REMINDER,
+            message: `Reminder: Your ${eventLabel} at ${game.location} starts soon (${dateLabel}).`,
             relatedGameID: game.gameID,
           },
         });

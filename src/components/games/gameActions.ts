@@ -10,6 +10,9 @@ type GameActionDeps = {
   setIsDeleting: (value: boolean) => void;
   setIsWithdrawing: (value: boolean) => void;
   setShowLeaveConfirm?: (value: boolean) => void;
+  setShowDeleteConfirm?: (value: boolean) => void;
+  onLeaveComplete?: (data: { gameDeleted: boolean }) => void;
+  onDeleteComplete?: () => void;
 };
 
 export function createGameActionHandlers({
@@ -19,6 +22,9 @@ export function createGameActionHandlers({
   setIsDeleting,
   setIsWithdrawing,
   setShowLeaveConfirm,
+  setShowDeleteConfirm,
+  onLeaveComplete,
+  onDeleteComplete,
 }: GameActionDeps) {
   const handleLeave = async () => {
     setShowLeaveConfirm?.(false);
@@ -35,7 +41,9 @@ export function createGameActionHandlers({
       }
       const data = await res.json();
 
-      if (data.gameDeleted) {
+      if (onLeaveComplete) {
+        onLeaveComplete(data);
+      } else if (data.gameDeleted) {
         router.push("/games");
         router.refresh();
       } else {
@@ -49,12 +57,7 @@ export function createGameActionHandlers({
   };
 
   const handleDelete = async () => {
-    if (
-      !confirm(
-        "Delete this game? It will be permanently removed from the platform.",
-      )
-    )
-      return;
+    setShowDeleteConfirm?.(false);
     setIsDeleting(true);
     setError(null);
     try {
@@ -66,8 +69,12 @@ export function createGameActionHandlers({
         setError(data.error ?? "Failed to delete game");
         return;
       }
-      router.push("/games");
-      router.refresh();
+      if (onDeleteComplete) {
+        onDeleteComplete();
+      } else {
+        router.push("/games");
+        router.refresh();
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {

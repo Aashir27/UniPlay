@@ -130,7 +130,7 @@ export function Select({
         <ul
           id={listId}
           role="listbox"
-          className={`absolute left-0 top-full z-20 mt-2 w-full overflow-hidden rounded-[12px] border border-[var(--up-border)] bg-[var(--up-surface)] shadow-2xl shadow-black/30 ${listClassName}`}
+          className={`absolute left-0 top-full z-20 mt-2 w-full max-h-[220px] overflow-y-auto overflow-x-hidden rounded-[12px] border border-[var(--up-border)] bg-[var(--up-surface)] shadow-2xl shadow-black/30 ${listClassName}`}
         >
           {options.map((opt, idx) => {
             const isActive = idx === activeIdx;

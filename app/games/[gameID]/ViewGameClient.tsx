@@ -37,6 +37,7 @@ export default function ViewGameClient({
   const [showParticipants, setShowParticipants] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const hasJoined = initialHasJoined;
 
@@ -47,6 +48,7 @@ export default function ViewGameClient({
     setIsDeleting,
     setIsWithdrawing,
     setShowLeaveConfirm,
+    setShowDeleteConfirm,
   });
 
   const isFull =
@@ -243,7 +245,7 @@ export default function ViewGameClient({
         )}
         {isCreator && (
           <button
-            onClick={handleDelete}
+            onClick={() => setShowDeleteConfirm(true)}
             disabled={isDeleting}
             className="rounded-[10px] border border-[rgba(248,113,113,0.2)] bg-[var(--up-danger-bg)] px-4 py-2 font-medium text-[var(--up-danger)] transition hover:bg-[rgba(248,113,113,0.14)] disabled:opacity-50"
           >
@@ -309,6 +311,38 @@ export default function ViewGameClient({
                 className="rounded-[10px] bg-[var(--up-danger)] px-4 py-2 text-sm font-medium text-[#0b0f1a] transition hover:bg-[rgba(248,113,113,0.85)]"
               >
                 Leave game
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showDeleteConfirm && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="w-full max-w-md rounded-[18px] border border-[var(--up-border)] bg-[var(--up-surface)] p-6 shadow-2xl shadow-black/40">
+            <h3 className="text-lg font-semibold">Delete this game?</h3>
+            <p className="mt-2 text-sm text-[var(--up-muted)]">
+              It will be permanently removed from the platform.
+            </p>
+            <div className="mt-5 flex flex-wrap justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setShowDeleteConfirm(false)}
+                className="rounded-[10px] border border-[var(--up-border-mid)] px-4 py-2 text-sm font-medium text-[var(--up-text)] transition hover:bg-[var(--up-accent-bg)]"
+              >
+                Keep game
+              </button>
+              <button
+                type="button"
+                onClick={handleDelete}
+                className="rounded-[10px] bg-[var(--up-danger)] px-4 py-2 text-sm font-medium text-[#0b0f1a] transition hover:bg-[rgba(248,113,113,0.85)]"
+                disabled={isDeleting}
+              >
+                {isDeleting ? "Deleting..." : "Delete game"}
               </button>
             </div>
           </div>

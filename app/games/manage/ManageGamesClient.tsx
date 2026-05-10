@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Game } from "@prisma/client";
-import { formatGameTime } from "@/lib/formatTime";
+import { formatGameDateTime } from "@/lib/formatTime";
 import { createGameActionHandlers } from "@/src/components/games/gameActions";
 
 interface ManageGamesClientProps {
@@ -19,6 +19,8 @@ export default function ManageGamesClient({ games }: ManageGamesClientProps) {
   const [deletingGameID, setDeletingGameID] = useState<string | null>(null);
   const [withdrawingGameID, setWithdrawingGameID] = useState<string | null>(null);
   const [leaveConfirmGameID, setLeaveConfirmGameID] = useState<string | null>(null);
+  const [deleteConfirmGameID, setDeleteConfirmGameID] = useState<string | null>(null);
+  const [completeConfirmGameID, setCompleteConfirmGameID] = useState<string | null>(null);
 
   async function patchStatus(gameID: string, status: "COMPLETED" | "CANCELLED") {
     setActionLoading(gameID + status);
@@ -50,8 +52,7 @@ export default function ManageGamesClient({ games }: ManageGamesClientProps) {
   }
 
   const handleComplete = (gameID: string) => {
-    if (!confirm("Mark this game as completed?")) return;
-    patchStatus(gameID, "COMPLETED");
+    setCompleteConfirmGameID(gameID);
   };
 
   const statusBadge = (status: string) => {
@@ -86,6 +87,15 @@ export default function ManageGamesClient({ games }: ManageGamesClientProps) {
       setShowLeaveConfirm: (visible) => {
         if (!visible) setLeaveConfirmGameID(null);
       },
+      setShowDeleteConfirm: (visible) => {
+        if (!visible) setDeleteConfirmGameID(null);
+      },
+      onDeleteComplete: () => {
+        setLocalGames((prev) => prev.filter((g) => g.gameID !== gameID));
+      },
+      onLeaveComplete: () => {
+        setLocalGames((prev) => prev.filter((g) => g.gameID !== gameID));
+      },
     });
 
   const leaveConfirmGame = localGames.find(
@@ -96,6 +106,23 @@ export default function ManageGamesClient({ games }: ManageGamesClientProps) {
     : null;
   const isLeaveConfirmBusy = leaveConfirmGame
     ? withdrawingGameID === leaveConfirmGame.gameID
+    : false;
+
+  const deleteConfirmGame = localGames.find(
+    (game) => game.gameID === deleteConfirmGameID,
+  );
+  const deleteConfirmActions = deleteConfirmGame
+    ? createActionsForGame(deleteConfirmGame.gameID)
+    : null;
+  const isDeleteConfirmBusy = deleteConfirmGame
+    ? deletingGameID === deleteConfirmGame.gameID
+    : false;
+
+  const completeConfirmGame = localGames.find(
+    (game) => game.gameID === completeConfirmGameID,
+  );
+  const isCompleteConfirmBusy = completeConfirmGame
+    ? actionLoading === `${completeConfirmGame.gameID}COMPLETED`
     : false;
 
   return (
@@ -112,7 +139,6 @@ export default function ManageGamesClient({ games }: ManageGamesClientProps) {
           const terminal = isTerminal(game.status);
           const isDeleting = deletingGameID === game.gameID;
           const isWithdrawing = withdrawingGameID === game.gameID;
-          const { handleDelete } = createActionsForGame(game.gameID);
           const actionsDisabled = busy || isDeleting || isWithdrawing;
 
           return (
@@ -126,7 +152,10 @@ export default function ManageGamesClient({ games }: ManageGamesClientProps) {
                   {statusBadge(game.status)}
                 </div>
                 <p className="mt-1 text-sm text-[var(--up-muted)]">
-                  {formatGameTime(new Date(game.dateTime))} • {game.location}
+                  {formatGameDateTime(new Date(game.dateTime))}
+                </p>
+                <p className="mt-1 text-xs text-[var(--up-muted)]">
+                  {game.location}
                 </p>
                 <p className="mt-1 text-xs text-[var(--up-muted)]">
                   {game.currentCount}/{game.maxParticipants} participants
@@ -151,7 +180,7 @@ export default function ManageGamesClient({ games }: ManageGamesClientProps) {
                       : "Mark as Completed"}
                   </button>
                   <button
-                    onClick={handleDelete}
+                    onClick={() => setDeleteConfirmGameID(game.gameID)}
                     disabled={actionsDisabled}
                     className="rounded-[10px] border border-[rgba(248,113,113,0.2)] bg-[var(--up-danger-bg)] px-3 py-2 text-sm font-medium text-[var(--up-danger)] transition hover:bg-[rgba(248,113,113,0.14)] disabled:opacity-50"
                   >
@@ -197,6 +226,74 @@ export default function ManageGamesClient({ games }: ManageGamesClientProps) {
                 disabled={isLeaveConfirmBusy}
               >
                 {isLeaveConfirmBusy ? "Leaving..." : "Leave game"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {deleteConfirmGame && deleteConfirmActions && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="w-full max-w-md rounded-[18px] border border-[var(--up-border)] bg-[var(--up-surface)] p-6 shadow-2xl shadow-black/40">
+            <h3 className="text-lg font-semibold">Delete this game?</h3>
+            <p className="mt-2 text-sm text-[var(--up-muted)]">
+              It will be permanently removed from the platform.
+            </p>
+            <div className="mt-5 flex flex-wrap justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setDeleteConfirmGameID(null)}
+                className="rounded-[10px] border border-[var(--up-border-mid)] px-4 py-2 text-sm font-medium text-[var(--up-text)] transition hover:bg-[var(--up-accent-bg)]"
+              >
+                Keep game
+              </button>
+              <button
+                type="button"
+                onClick={deleteConfirmActions.handleDelete}
+                className="rounded-[10px] bg-[var(--up-danger)] px-4 py-2 text-sm font-medium text-[#0b0f1a] transition hover:bg-[rgba(248,113,113,0.85)]"
+                disabled={isDeleteConfirmBusy}
+              >
+                {isDeleteConfirmBusy ? "Deleting..." : "Delete game"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {completeConfirmGame && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="w-full max-w-md rounded-[18px] border border-[var(--up-border)] bg-[var(--up-surface)] p-6 shadow-2xl shadow-black/40">
+            <h3 className="text-lg font-semibold">Mark this game as completed?</h3>
+            <p className="mt-2 text-sm text-[var(--up-muted)]">
+              This will finalize the game and close participation.
+            </p>
+            <div className="mt-5 flex flex-wrap justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setCompleteConfirmGameID(null)}
+                className="rounded-[10px] border border-[var(--up-border-mid)] px-4 py-2 text-sm font-medium text-[var(--up-text)] transition hover:bg-[var(--up-accent-bg)]"
+              >
+                Keep game
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (!completeConfirmGame) return;
+                  setCompleteConfirmGameID(null);
+                  patchStatus(completeConfirmGame.gameID, "COMPLETED");
+                }}
+                className="rounded-[10px] bg-[var(--up-accent)] px-4 py-2 text-sm font-medium text-[#0b0f1a] transition hover:bg-[var(--up-accent-dim)]"
+                disabled={isCompleteConfirmBusy}
+              >
+                {isCompleteConfirmBusy ? "Saving..." : "Mark completed"}
               </button>
             </div>
           </div>

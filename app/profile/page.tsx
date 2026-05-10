@@ -12,13 +12,16 @@ export default async function ProfilePage() {
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 px-6 py-10">
-      <header className="rounded-[20px] border border-[var(--up-border)] bg-[var(--up-surface)] p-5">
-        <h1 className="font-[family:var(--font-display)] text-3xl font-bold">
+    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-6 py-10">
+      <header className="rounded-[24px] border border-[var(--up-border)] bg-[var(--up-surface)] p-6 shadow-2xl shadow-black/20 sm:p-8">
+        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--up-muted)]">
+          Your profile
+        </p>
+        <h1 className="mt-3 font-[family:var(--font-display)] text-3xl font-bold tracking-tight sm:text-4xl">
           Welcome, {session.user.name}
         </h1>
-        <p className="text-sm text-[var(--up-muted)]">
-          Auth-required area (FR-39). Session user id: {session.user.id}
+        <p className="mt-2 text-sm text-[var(--up-muted)]">
+          Keep your sports preferences up to date for better matches.
         </p>
       </header>
 
