@@ -27,7 +27,7 @@ export default async function BrowseGamesPage({
   const games = await filterGames({
     sport,
     skillLevel,
-    status: "OPEN" as GameStatus,
+    status: ["OPEN", "FULL"] as GameStatus[],
   });
 
   return (

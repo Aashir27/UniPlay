@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Game } from "@prisma/client";
-import { formatGameTime } from "@/lib/formatTime";
+import { formatGameDateTime } from "@/lib/formatTime";
 
 type Participant = {
   userID: string;
@@ -195,7 +195,7 @@ export default function ViewGameClient({
               Date &amp; Time
             </p>
             <p className="mt-1 font-semibold">
-              {formatGameTime(new Date(game.dateTime))}
+              {formatGameDateTime(new Date(game.dateTime))}
             </p>
           </div>
           <div>

@@ -21,7 +21,7 @@ export interface CreateGameInput {
 
 export interface FilterGamesInput {
   sport?: string;
-  status?: GameStatus;
+  status?: GameStatus | GameStatus[];
   creatorID?: string;
   skillLevel?: SkillLevel;
   dateFrom?: Date;
@@ -61,9 +61,13 @@ export async function filterGames(
   db: DbClient = prisma,
 ): Promise<Game[]> {
   // Process 3.0 (Filter Games)
+  const statusFilter = Array.isArray(input.status)
+    ? { in: input.status }
+    : input.status;
+
   const where: Prisma.GameWhereInput = {
     sport: input.sport,
-    status: input.status,
+    status: statusFilter,
     creatorID: input.creatorID,
     skillLevel: input.skillLevel,
     ...(input.dateFrom || input.dateTo
