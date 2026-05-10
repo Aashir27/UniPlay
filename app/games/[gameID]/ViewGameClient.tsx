@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Game } from "@prisma/client";
 import { formatGameDateTime } from "@/lib/formatTime";
+import { createGameActionHandlers } from "@/src/components/games/gameActions";
 
 type Participant = {
   userID: string;
@@ -36,8 +37,19 @@ export default function ViewGameClient({
   const [showParticipants, setShowParticipants] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const hasJoined = initialHasJoined;
+
+  const { handleDelete, handleLeave } = createGameActionHandlers({
+    gameID: game.gameID,
+    router,
+    setError,
+    setIsDeleting,
+    setIsWithdrawing,
+    setShowLeaveConfirm,
+    setShowDeleteConfirm,
+  });
 
   const isFull =
     game.status === "FULL" || game.currentCount >= game.maxParticipants;
@@ -69,62 +81,6 @@ export default function ViewGameClient({
     }
   };
 
-  const handleLeave = async () => {
-    setShowLeaveConfirm(false);
-    setIsWithdrawing(true);
-    setError(null);
-    try {
-      const res = await fetch(`/api/games/${game.gameID}/withdraw`, {
-        method: "POST",
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        setError(data.error ?? "Failed to leave game");
-        return;
-      }
-      const data = await res.json();
-
-      // If game was deleted, redirect to games list
-      if (data.gameDeleted) {
-        router.push("/games");
-        router.refresh();
-      } else {
-        // Otherwise, refresh the current page to show updated state
-        router.push(`/games/${game.gameID}`);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
-    } finally {
-      setIsWithdrawing(false);
-    }
-  };
-
-  const handleDelete = async () => {
-    if (
-      !confirm(
-        "Delete this game? It will be permanently removed from the platform.",
-      )
-    )
-      return;
-    setIsDeleting(true);
-    setError(null);
-    try {
-      const res = await fetch(`/api/games/${game.gameID}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        setError(data.error ?? "Failed to delete game");
-        return;
-      }
-      router.push("/games");
-      router.refresh();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
-    } finally {
-      setIsDeleting(false);
-    }
-  };
 
   const statusConfig: Record<
     string,
@@ -289,7 +245,7 @@ export default function ViewGameClient({
         )}
         {isCreator && (
           <button
-            onClick={handleDelete}
+            onClick={() => setShowDeleteConfirm(true)}
             disabled={isDeleting}
             className="rounded-[10px] border border-[rgba(248,113,113,0.2)] bg-[var(--up-danger-bg)] px-4 py-2 font-medium text-[var(--up-danger)] transition hover:bg-[rgba(248,113,113,0.14)] disabled:opacity-50"
           >
@@ -355,6 +311,38 @@ export default function ViewGameClient({
                 className="rounded-[10px] bg-[var(--up-danger)] px-4 py-2 text-sm font-medium text-[#0b0f1a] transition hover:bg-[rgba(248,113,113,0.85)]"
               >
                 Leave game
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showDeleteConfirm && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="w-full max-w-md rounded-[18px] border border-[var(--up-border)] bg-[var(--up-surface)] p-6 shadow-2xl shadow-black/40">
+            <h3 className="text-lg font-semibold">Delete this game?</h3>
+            <p className="mt-2 text-sm text-[var(--up-muted)]">
+              It will be permanently removed from the platform.
+            </p>
+            <div className="mt-5 flex flex-wrap justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setShowDeleteConfirm(false)}
+                className="rounded-[10px] border border-[var(--up-border-mid)] px-4 py-2 text-sm font-medium text-[var(--up-text)] transition hover:bg-[var(--up-accent-bg)]"
+              >
+                Keep game
+              </button>
+              <button
+                type="button"
+                onClick={handleDelete}
+                className="rounded-[10px] bg-[var(--up-danger)] px-4 py-2 text-sm font-medium text-[#0b0f1a] transition hover:bg-[rgba(248,113,113,0.85)]"
+                disabled={isDeleting}
+              >
+                {isDeleting ? "Deleting..." : "Delete game"}
               </button>
             </div>
           </div>

@@ -42,6 +42,8 @@ const SPORT_EMOJI: Record<string, string> = {
   Tennis: "🎾",
   Volleyball: "🏐",
   "Table Tennis": "🏓",
+  Foosball: "⚽",
+  Swimming: "🏊",
 };
 
 export function DashboardClient({

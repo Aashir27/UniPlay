@@ -54,7 +54,7 @@ export default async function EditGamePage({
         gameID={gameID}
         initialData={{
           sport: game.sport,
-          dateTime: game.dateTime.toISOString().slice(0, 16),
+          dateTime: game.dateTime.toISOString(),
           location: game.location,
           skillLevel: game.skillLevel,
           maxParticipants: game.maxParticipants,

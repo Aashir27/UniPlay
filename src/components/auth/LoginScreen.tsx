@@ -52,12 +52,14 @@ export function LoginScreen() {
         </div>
         <div className="relative z-10 flex flex-wrap gap-2">
           {[
+            "🏏 Cricket",
             "⚽ Football",
             "🏀 Basketball",
             "🎾 Tennis",
-            "🏏 Cricket",
             "🏐 Volleyball",
             "🏓 Table Tennis",
+            "⚽ Foosball",
+            "🏊 Swimming",
           ].map((sport) => (
             <span
               key={sport}

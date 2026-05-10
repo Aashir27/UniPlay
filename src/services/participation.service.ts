@@ -7,6 +7,7 @@ import {
 } from "@prisma/client";
 
 import { prisma } from "@/src/lib/prisma";
+import { formatSportEvent, getSportEventNoun } from "@/src/lib/formatSport";
 
 export interface JoinGameInput {
   userID: string;
@@ -102,12 +103,13 @@ export async function joinGame(
               select: { name: true },
             });
             const rejoinerName = rejoiner?.name ?? "A player";
+            const eventLabel = formatSportEvent(game.sport);
 
             await tx.notification.create({
               data: {
                 recipientID: game.creatorID,
                 type: NotificationType.JOIN_REQUEST,
-                message: `${rejoinerName} joined your ${game.sport} game at ${game.location}.`,
+                message: `${rejoinerName} joined your ${eventLabel} at ${game.location}.`,
                 relatedGameID: game.gameID,
               },
             });
@@ -140,12 +142,13 @@ export async function joinGame(
             select: { name: true },
           });
           const joinerName = joiner?.name ?? "A player";
+          const eventLabel = formatSportEvent(game.sport);
 
           await tx.notification.create({
             data: {
               recipientID: game.creatorID,
               type: NotificationType.JOIN_REQUEST,
-              message: `${joinerName} joined your ${game.sport} game at ${game.location}.`,
+              message: `${joinerName} joined your ${eventLabel} at ${game.location}.`,
               relatedGameID: game.gameID,
             },
           });
@@ -253,13 +256,15 @@ export async function cancelParticipation(
               select: { name: true },
             });
             const withdrawerName = withdrawer?.name ?? "A player";
+            const eventLabel = formatSportEvent(game.sport);
+            const eventNoun = getSportEventNoun(game.sport);
 
             // Notify new host
             await tx.notification.create({
               data: {
                 recipientID: newCreator.userID,
                 type: NotificationType.JOIN_CONFIRM,
-                message: `You are now the host of the ${game.sport} game at ${game.location}. ${withdrawerName} left the game.`,
+                message: `You are now the host of the ${eventLabel} at ${game.location}. ${withdrawerName} left the ${eventNoun}.`,
                 relatedGameID: input.gameID,
               },
             });
@@ -306,11 +311,12 @@ export async function cancelParticipation(
             select: { name: true },
           });
           const withdrawerName = withdrawer?.name ?? "A player";
+          const eventLabel = formatSportEvent(game.sport);
           await tx.notification.create({
             data: {
               recipientID: game.creatorID,
               type: NotificationType.WITHDRAWAL,
-              message: `${withdrawerName} left your ${game.sport} game at ${game.location}.`,
+              message: `${withdrawerName} left your ${eventLabel} at ${game.location}.`,
               relatedGameID: input.gameID,
             },
           });

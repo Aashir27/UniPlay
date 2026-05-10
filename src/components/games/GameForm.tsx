@@ -16,6 +16,13 @@ interface GameFormProps {
   isEditing?: boolean;
 }
 
+const toLocalDateTimeInputValue = (value?: string | Date) => {
+  const date = value ? new Date(value) : new Date();
+  if (Number.isNaN(date.getTime())) return "";
+  const offset = date.getTimezoneOffset() * 60000;
+  return new Date(date.getTime() - offset).toISOString().slice(0, 16);
+};
+
 export default function GameForm({
   gameID,
   initialData,
@@ -26,8 +33,8 @@ export default function GameForm({
   const [error, setError] = useState<string | null>(null);
 
   const [sport, setSport] = useState(initialData?.sport ?? "");
-  const [dateTime, setDateTime] = useState(
-    initialData?.dateTime ?? new Date().toISOString().slice(0, 16),
+  const [dateTime, setDateTime] = useState(() =>
+    toLocalDateTimeInputValue(initialData?.dateTime),
   );
   const [location, setLocation] = useState(initialData?.location ?? "");
   const [skillLevel, setSkillLevel] = useState<string>(
@@ -36,6 +43,7 @@ export default function GameForm({
   const [maxParticipants, setMaxParticipants] = useState<string>(
     String(initialData?.maxParticipants ?? 4),
   );
+  const minDateTime = isEditing ? undefined : toLocalDateTimeInputValue();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -46,6 +54,20 @@ export default function GameForm({
       setError("Please select a sport.");
       setIsLoading(false);
       return;
+    }
+
+    if (!isEditing) {
+      const selectedDate = new Date(dateTime);
+      if (Number.isNaN(selectedDate.getTime())) {
+        setError("Please select a valid date and time.");
+        setIsLoading(false);
+        return;
+      }
+      if (selectedDate.getTime() < Date.now()) {
+        setError("Date and time must be in the future.");
+        setIsLoading(false);
+        return;
+      }
     }
 
     try {
@@ -72,8 +94,9 @@ export default function GameForm({
         return;
       }
 
-      const data = await response.json();
-      router.push(`/games/${data.game.gameID}`);
+      await response.json();
+      const nextRoute = isEditing ? "/games/manage" : "/games";
+      router.push(nextRoute);
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
@@ -109,6 +132,8 @@ export default function GameForm({
             { value: "Tennis", label: "Tennis" },
             { value: "Volleyball", label: "Volleyball" },
             { value: "Table Tennis", label: "Table Tennis" },
+            { value: "Foosball", label: "Foosball" },
+            { value: "Swimming", label: "Swimming" },
           ]}
           className="mt-1"
         />
@@ -123,6 +148,7 @@ export default function GameForm({
           type="datetime-local"
           value={dateTime}
           onChange={(e) => setDateTime(e.target.value)}
+          min={minDateTime}
           required
           className="mt-1 w-full rounded-lg border border-[var(--up-border-mid)] bg-[var(--up-surface-2)] px-3 py-2 text-[var(--up-text)]"
         />

@@ -25,9 +25,11 @@ const SPORTS = [
   "Cricket",
   "Football",
   "Basketball",
-  "TableTennis",
-  "Volleyball",
   "Tennis",
+  "Volleyball",
+  "Table Tennis",
+  "Foosball",
+  "Swimming",
 ];
 
 export function InvitePlayersClient() {

@@ -30,9 +30,11 @@ const SPORTS = [
   "Cricket",
   "Football",
   "Basketball",
-  "TableTennis",
-  "Volleyball",
   "Tennis",
+  "Volleyball",
+  "Table Tennis",
+  "Foosball",
+  "Swimming",
 ];
 const SKILL_LEVELS = ["BEGINNER", "INTERMEDIATE", "ADVANCED"];
 
@@ -179,7 +181,7 @@ export function ProfileClient() {
 
   if (isLoading) {
     return (
-      <section className="space-y-5 rounded-[20px] border border-[var(--up-border)] bg-[var(--up-surface)] p-5">
+      <section className="space-y-5 rounded-[24px] border border-[var(--up-border)] bg-[var(--up-surface)] p-6 sm:p-7">
         <h2 className="font-[family:var(--font-display)] text-xl font-semibold">
           Your sports profile
         </h2>
@@ -189,81 +191,100 @@ export function ProfileClient() {
   }
 
   return (
-    <section className="space-y-5 rounded-[20px] border border-[var(--up-border)] bg-[var(--up-surface)] p-5">
-      <h2 className="font-[family:var(--font-display)] text-xl font-semibold">
-        Your sports profile
-      </h2>
-      <p className="text-sm text-[var(--up-muted)]">
-        Add profile preferences and assign skill levels.
-      </p>
-
-      <button
-        onClick={addRow}
-        className="rounded-[10px] bg-[var(--up-accent)] px-4 py-2 font-medium text-[#0b0f1a] transition hover:bg-[var(--up-accent-dim)]"
-      >
-        Add Sport
-      </button>
+    <section className="space-y-6 rounded-[24px] border border-[var(--up-border)] bg-[var(--up-surface)] p-6 shadow-2xl shadow-black/20 sm:p-7">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h2 className="font-[family:var(--font-display)] text-xl font-semibold">
+            Sports profile
+          </h2>
+          <p className="mt-1 text-sm text-[var(--up-muted)]">
+            Add your preferred sport and your skill level.
+          </p>
+        </div>
+        <button
+          onClick={addRow}
+          className="rounded-[10px] bg-[var(--up-accent)] px-4 py-2 text-sm font-semibold text-[#0b0f1a] transition hover:bg-[var(--up-accent-dim)]"
+        >
+          Add sport
+        </button>
+      </div>
 
       {message ? <p className="text-[var(--up-success)]">{message}</p> : null}
       {error ? <p className="text-[var(--up-danger)]">{error}</p> : null}
 
-      <ul className="space-y-3">
-        {rows.map((row) => (
-          <li
-            key={row.id}
-            className="flex flex-col gap-2 rounded-[12px] border border-[var(--up-border)] bg-[var(--up-surface-2)] p-3 sm:flex-row sm:items-center sm:gap-3"
-          >
-            <Select
-              value={row.sport}
-              onChange={(value) => updateRow(row.id, value, row.skillLevel)}
-              options={SPORTS.map((s) => ({ value: s, label: s }))}
-              placeholder="Select Sport"
-              disabled={!row.isNew}
-              className="flex-1"
-              buttonClassName="w-full sm:w-auto"
-            />
+      {rows.length === 0 ? (
+        <div className="rounded-[16px] border border-[var(--up-border)] bg-[var(--up-surface-2)] p-5 text-sm text-[var(--up-muted)]">
+          No sports added yet. Click "Add sport" to create your first entry.
+        </div>
+      ) : (
+        <ul className="space-y-3">
+          {rows.map((row) => (
+            <li
+              key={row.id}
+              className="grid gap-3 rounded-[16px] border border-[var(--up-border)] bg-[var(--up-surface-2)] p-4 sm:grid-cols-[1fr_1fr_auto]"
+            >
+              <div className="space-y-1">
+                <p className="text-xs font-medium uppercase tracking-wide text-[var(--up-muted)]">
+                  Preferred sport
+                </p>
+                <Select
+                  value={row.sport}
+                  onChange={(value) => updateRow(row.id, value, row.skillLevel)}
+                  options={SPORTS.map((s) => ({ value: s, label: s }))}
+                  placeholder="Select sport"
+                  disabled={!row.isNew}
+                  className="w-full"
+                  buttonClassName="w-full"
+                />
+              </div>
 
-            <Select
-              value={row.skillLevel}
-              onChange={(value) =>
-                updateRow(row.id, row.sport, value as SkillLevel)
-              }
-              options={SKILL_LEVELS.map((sl) => ({
-                value: sl,
-                label:
-                  sl === "BEGINNER"
-                    ? "Beginner"
-                    : sl === "INTERMEDIATE"
-                      ? "Intermediate"
-                      : "Advanced",
-              }))}
-              disabled={!row.isNew}
-              className="flex-1"
-              buttonClassName="w-full sm:w-auto"
-            />
+              <div className="space-y-1">
+                <p className="text-xs font-medium uppercase tracking-wide text-[var(--up-muted)]">
+                  Skill level
+                </p>
+                <Select
+                  value={row.skillLevel}
+                  onChange={(value) =>
+                    updateRow(row.id, row.sport, value as SkillLevel)
+                  }
+                  options={SKILL_LEVELS.map((sl) => ({
+                    value: sl,
+                    label:
+                      sl === "BEGINNER"
+                        ? "Beginner"
+                        : sl === "INTERMEDIATE"
+                          ? "Intermediate"
+                          : "Advanced",
+                  }))}
+                  disabled={!row.isNew}
+                  className="w-full"
+                  buttonClassName="w-full"
+                />
+              </div>
 
-            <div className="flex gap-2">
-              {row.isNew && (
+              <div className="flex flex-wrap gap-2 sm:items-end sm:justify-end">
+                {row.isNew && (
+                  <button
+                    onClick={() => saveRow(row.id)}
+                    disabled={row.isSaving || !row.sport}
+                    className="rounded-[10px] bg-[var(--up-accent)] px-3 py-2 text-sm font-medium text-[#0b0f1a] transition hover:bg-[var(--up-accent-dim)] disabled:opacity-50"
+                  >
+                    {row.isSaving ? "Saving..." : "Save"}
+                  </button>
+                )}
+
                 <button
-                  onClick={() => saveRow(row.id)}
-                  disabled={row.isSaving || !row.sport}
-                  className="rounded-[10px] bg-[var(--up-accent)] px-3 py-1 text-sm font-medium text-[#0b0f1a] transition hover:bg-[var(--up-accent-dim)] disabled:opacity-50"
+                  onClick={() => removeRow(row.id)}
+                  disabled={row.isSaving}
+                  className="rounded-[10px] border border-[rgba(248,113,113,0.2)] bg-[var(--up-danger-bg)] px-3 py-2 text-sm font-medium text-[var(--up-danger)] transition hover:bg-[rgba(248,113,113,0.14)] disabled:opacity-50"
                 >
-                  {row.isSaving ? "Saving..." : "Save"}
+                  {row.isSaving ? "Removing..." : "Remove"}
                 </button>
-              )}
-
-              <button
-                onClick={() => removeRow(row.id)}
-                disabled={row.isSaving}
-                className="rounded-[10px] border border-[rgba(248,113,113,0.2)] bg-[var(--up-danger-bg)] px-3 py-1 text-sm font-medium text-[var(--up-danger)] transition hover:bg-[rgba(248,113,113,0.14)] disabled:opacity-50"
-              >
-                {row.isSaving ? "Removing..." : "Remove"}
-              </button>
-            </div>
-          </li>
-        ))}
-      </ul>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
     </section>
   );
 }

@@ -6,6 +6,7 @@ import { NotificationType } from "@prisma/client";
 import { authOptions } from "@/src/lib/auth";
 import { prisma } from "@/src/lib/prisma";
 import { updateGame } from "@/src/services/game.service";
+import { formatSportEvent } from "@/src/lib/formatSport";
 
 const UpdateGameSchema = z.object({
   sport: z.string().min(2).max(50).optional(),
@@ -132,11 +133,12 @@ export async function PATCH(
 
       if (participants.length > 0) {
         const summary = changes.join("; ");
+        const eventLabel = formatSportEvent(game.sport);
         await prisma.notification.createMany({
           data: participants.map((p) => ({
             recipientID: p.userID,
             type: NotificationType.JOIN_CONFIRM,
-            message: `The ${game.sport} game at ${game.location} was updated by the organiser: ${summary}.`,
+            message: `The ${eventLabel} at ${game.location} was updated by the organiser: ${summary}.`,
             relatedGameID: gameID,
           })),
         });
@@ -193,11 +195,12 @@ export async function DELETE(
       month: "long",
       day: "numeric",
     });
+    const eventLabel = formatSportEvent(game.sport);
     await prisma.notification.createMany({
       data: game.participations.map((p) => ({
         recipientID: p.userID,
         type: NotificationType.CANCELLATION,
-        message: `The ${game.sport} game at ${game.location} on ${dateLabel} has been cancelled by the organiser.`,
+        message: `The ${eventLabel} at ${game.location} on ${dateLabel} has been cancelled by the organiser.`,
         relatedGameID: gameID,
       })),
     });
