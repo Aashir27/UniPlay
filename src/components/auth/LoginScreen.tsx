@@ -98,6 +98,12 @@ export function LoginScreen() {
               />
             </Field>
 
+            <div className="text-right">
+              <Link href="/forgot-password" className="text-sm font-medium text-[var(--up-accent)]">
+                Forgot password?
+              </Link>
+            </div>
+
             <Field label="Password">
               <div className="relative">
                 <input

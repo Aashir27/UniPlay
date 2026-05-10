@@ -13,7 +13,7 @@ import crypto from "crypto";
 import type { Prisma, PrismaClient, User } from "@prisma/client";
 
 import { prisma } from "@/src/lib/prisma";
-import { sendVerificationEmail } from "@/src/lib/email";
+import { sendVerificationEmail, sendPasswordResetEmail } from "@/src/lib/email";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -261,4 +261,72 @@ export async function resendOtp(
   if (user.isVerified) throw new Error("User is already verified");
 
   await issueOtp(user, db);
+}
+
+/**
+ * Issue a password-reset token for the given email and send a reset link.
+ * Silent no-op if the email is not registered (to avoid account enumeration).
+ */
+export async function issuePasswordReset(
+  email: string,
+  db: PrismaClient = prisma as PrismaClient,
+): Promise<void> {
+  const user = await db.user.findUnique({ where: { email: email.toLowerCase().trim() } });
+  if (!user) return; // don't reveal existence
+
+  const token = crypto.randomBytes(32).toString("hex");
+  const tokenHash = await bcrypt.hash(token, OTP_BCRYPT_ROUNDS);
+  const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 60 minutes
+
+  // Invalidate previous unused resets
+  await db.passwordReset.updateMany({
+    where: { userID: user.userID, usedAt: null },
+    data: { usedAt: new Date() },
+  });
+
+  await db.passwordReset.create({
+    data: {
+      userID: user.userID,
+      tokenHash,
+      expiresAt,
+    },
+  });
+
+  const appUrl = process.env.APP_URL ?? "http://localhost:3000";
+  const link = `${appUrl.replace(/\/$/, "")}/reset-password?token=${token}&uid=${user.userID}`;
+
+  await sendPasswordResetEmail({ to: user.email, name: user.name, link });
+}
+
+export interface ResetPasswordInput {
+  userID: string;
+  token: string;
+  newPassword: string;
+}
+
+/**
+ * Verify reset token and set a new password. Returns true on success.
+ */
+export async function resetPassword(
+  input: ResetPasswordInput,
+  db: PrismaClient = prisma as PrismaClient,
+): Promise<boolean> {
+  const record = await db.passwordReset.findFirst({
+    where: { userID: input.userID, usedAt: null, expiresAt: { gt: new Date() } },
+    orderBy: { expiresAt: "desc" },
+  });
+
+  if (!record) return false;
+
+  const matches = await bcrypt.compare(input.token, record.tokenHash);
+  if (!matches) return false;
+
+  const passwordHash = await bcrypt.hash(input.newPassword, PASSWORD_BCRYPT_ROUNDS);
+
+  await db.$transaction([
+    db.passwordReset.update({ where: { id: record.id }, data: { usedAt: new Date() } }),
+    db.user.update({ where: { userID: input.userID }, data: { passwordHash } }),
+  ]);
+
+  return true;
 }

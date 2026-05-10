@@ -87,3 +87,26 @@ export async function sendVerificationEmail(opts: {
     `,
   });
 }
+
+/** Convenience: send a password reset email with a one-time token link. */
+export async function sendPasswordResetEmail(opts: {
+  to: string;
+  name: string;
+  link: string;
+}): Promise<void> {
+  await sendMail({
+    to: opts.to,
+    subject: "Reset your UniPlay password",
+    text: `Hi ${opts.name},\n\nClick the link below to reset your password:\n\n${opts.link}\n\nIf you did not request this, ignore this email. The link expires in 60 minutes.`,
+    html: `
+      <div style="font-family:sans-serif;max-width:480px;margin:auto">
+        <h2 style="color:#059669">Reset your UniPlay password</h2>
+        <p>Click the button below to set a new password. This link expires in <strong>60 minutes</strong>.</p>
+        <div style="padding:1rem;text-align:center">
+          <a href="${opts.link}" style="display:inline-block;padding:0.75rem 1.2rem;border-radius:8px;background:#059669;color:#fff;text-decoration:none">Reset password</a>
+        </div>
+        <p style="color:#71717a;font-size:.85rem;margin-top:1.5rem">If you did not request a password reset, you can safely ignore this email.</p>
+      </div>
+    `,
+  });
+}

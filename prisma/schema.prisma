@@ -6,6 +6,99 @@ datasource db {
   provider = "postgresql"
 }
 
+model User {
+  userID             String              @id @default(uuid()) @db.Uuid
+  name               String
+  email              String              @unique
+  passwordHash       String
+  isVerified         Boolean             @default(false)
+  emailVerifications EmailVerification[]
+  passwordResets     PasswordReset[]
+  gamesCreated       Game[]              @relation("GameCreator")
+  notifications      Notification[]      @relation("NotificationRecipient")
+  participations     Participation[]
+  sportProfiles      SportProfile[]
+}
+
+model EmailVerification {
+  id        String    @id @default(uuid()) @db.Uuid
+  userID    String    @db.Uuid
+  otp       String
+  expiresAt DateTime
+  usedAt    DateTime?
+  user      User      @relation(fields: [userID], references: [userID], onDelete: Cascade)
+
+  @@index([userID])
+}
+
+model PasswordReset {
+  id        String    @id @default(uuid()) @db.Uuid
+  userID    String    @db.Uuid
+  tokenHash String
+  expiresAt DateTime
+  usedAt    DateTime?
+  user      User      @relation(fields: [userID], references: [userID], onDelete: Cascade)
+
+  @@index([userID])
+}
+
+model SportProfile {
+  profileID  String     @id @default(uuid()) @db.Uuid
+  userID     String     @db.Uuid
+  sport      String
+  skillLevel SkillLevel
+  user       User       @relation(fields: [userID], references: [userID], onDelete: Cascade)
+
+  @@unique([userID, sport])
+  @@index([sport])
+}
+
+model Game {
+  gameID          String          @id @default(uuid()) @db.Uuid
+  creatorID       String          @db.Uuid
+  sport           String
+  dateTime        DateTime
+  location        String
+  skillLevel      SkillLevel
+  maxParticipants Int
+  currentCount    Int             @default(0)
+  status          GameStatus      @default(DRAFT)
+  creator         User            @relation("GameCreator", fields: [creatorID], references: [userID], onDelete: Cascade)
+  notifications   Notification[]  @relation("NotificationGame")
+  participations  Participation[]
+
+  @@index([creatorID])
+  @@index([sport, status, dateTime])
+}
+
+model Participation {
+  participationID String              @id @default(uuid()) @db.Uuid
+  userID          String              @db.Uuid
+  gameID          String              @db.Uuid
+  status          ParticipationStatus @default(PENDING)
+  joinedAt        DateTime            @default(now())
+  game            Game                @relation(fields: [gameID], references: [gameID], onDelete: Cascade)
+  user            User                @relation(fields: [userID], references: [userID], onDelete: Cascade)
+
+  @@unique([userID, gameID])
+  @@index([gameID])
+}
+
+model Notification {
+  notifID       String           @id @default(uuid()) @db.Uuid
+  recipientID   String           @db.Uuid
+  type          NotificationType
+  message       String
+  isRead        Boolean          @default(false)
+  relatedGameID String?          @db.Uuid
+  createdAt     DateTime         @default(now())
+  recipient     User             @relation("NotificationRecipient", fields: [recipientID], references: [userID], onDelete: Cascade)
+  game          Game?            @relation("NotificationGame", fields: [relatedGameID], references: [gameID])
+
+  @@index([recipientID, isRead])
+  @@index([relatedGameID])
+}
+
 enum SkillLevel {
   BEGINNER
   INTERMEDIATE
@@ -33,91 +126,4 @@ enum NotificationType {
   CANCELLATION
   WITHDRAWAL
   REMINDER
-}
-
-model User {
-  userID       String  @id @default(uuid()) @db.Uuid
-  name         String
-  email        String  @unique
-  passwordHash String
-  isVerified   Boolean @default(false)
-
-  sportProfiles       SportProfile[]
-  gamesCreated        Game[]               @relation("GameCreator")
-  participations      Participation[]
-  notifications       Notification[]       @relation("NotificationRecipient")
-  emailVerifications  EmailVerification[]
-}
-
-model EmailVerification {
-  id        String   @id @default(uuid()) @db.Uuid
-  userID    String   @db.Uuid
-  otp       String   // bcrypt hash of the OTP
-  expiresAt DateTime
-  usedAt    DateTime?
-
-  user User @relation(fields: [userID], references: [userID], onDelete: Cascade)
-
-  @@index([userID])
-}
-
-model SportProfile {
-  profileID  String     @id @default(uuid()) @db.Uuid
-  userID     String     @db.Uuid
-  sport      String
-  skillLevel SkillLevel
-
-  user User @relation(fields: [userID], references: [userID], onDelete: Cascade)
-
-  @@unique([userID, sport])
-  @@index([sport])
-}
-
-model Game {
-  gameID          String     @id @default(uuid()) @db.Uuid
-  creatorID       String     @db.Uuid
-  sport           String
-  dateTime        DateTime
-  location        String
-  skillLevel      SkillLevel
-  maxParticipants Int
-  currentCount    Int        @default(0)
-  status          GameStatus @default(DRAFT)
-
-  creator        User            @relation("GameCreator", fields: [creatorID], references: [userID], onDelete: Cascade)
-  participations Participation[]
-  notifications  Notification[]  @relation("NotificationGame")
-
-  @@index([creatorID])
-  @@index([sport, status, dateTime])
-}
-
-model Participation {
-  participationID String              @id @default(uuid()) @db.Uuid
-  userID          String              @db.Uuid
-  gameID          String              @db.Uuid
-  status          ParticipationStatus @default(PENDING)
-  joinedAt        DateTime            @default(now())
-
-  user User @relation(fields: [userID], references: [userID], onDelete: Cascade)
-  game Game @relation(fields: [gameID], references: [gameID], onDelete: Cascade)
-
-  @@unique([userID, gameID])
-  @@index([gameID])
-}
-
-model Notification {
-  notifID       String           @id @default(uuid()) @db.Uuid
-  recipientID   String           @db.Uuid
-  type          NotificationType
-  message       String
-  isRead        Boolean          @default(false)
-  relatedGameID String?          @db.Uuid
-  createdAt     DateTime         @default(now())
-
-  recipient User  @relation("NotificationRecipient", fields: [recipientID], references: [userID], onDelete: Cascade)
-  game      Game? @relation("NotificationGame", fields: [relatedGameID], references: [gameID], onDelete: SetNull)
-
-  @@index([recipientID, isRead])
-  @@index([relatedGameID])
 }
