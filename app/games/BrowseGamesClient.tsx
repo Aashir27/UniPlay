@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Game } from "@prisma/client";
 import { Select } from "@/src/components/ui/Select";
+import { formatGameTime } from "@/lib/formatTime";
 
 interface BrowseGamesClientProps {
   initialGames: Game[];
@@ -365,7 +366,7 @@ export default function BrowseGamesClient({
                   </span>
                 </div>
                 <p className="mt-1 text-sm text-[var(--up-muted)]">
-                  {new Date(game.dateTime).toLocaleString()}
+                  {formatGameTime(new Date(game.dateTime))}
                 </p>
                 <p className="mt-1 text-xs text-[var(--up-muted)]">{game.location}</p>
                 <div className="mt-3 flex items-center justify-between text-xs font-medium text-[var(--up-muted)]">

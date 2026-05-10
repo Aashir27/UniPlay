@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import type { Game } from "@prisma/client";
+import { formatGameTime } from "@/lib/formatTime";
 
 interface ManageGamesClientProps {
   games: Game[];
@@ -96,7 +97,7 @@ export default function ManageGamesClient({ games }: ManageGamesClientProps) {
                   {statusBadge(game.status)}
                 </div>
                 <p className="mt-1 text-sm text-[var(--up-muted)]">
-                  {new Date(game.dateTime).toLocaleString()} • {game.location}
+                  {formatGameTime(new Date(game.dateTime))} • {game.location}
                 </p>
                 <p className="mt-1 text-xs text-[var(--up-muted)]">
                   {game.currentCount}/{game.maxParticipants} participants

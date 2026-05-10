@@ -28,6 +28,14 @@ export function AppShell({ children, userName }: AppShellProps) {
     .join("")
     .toUpperCase();
 
+  if (!userName) {
+    return (
+      <div className="min-h-screen bg-[var(--up-bg)] text-[var(--up-text)]">
+        {children}
+      </div>
+    );
+  }
+
   async function handleSignOut() {
     await signOut({ redirect: false });
     router.push("/");
