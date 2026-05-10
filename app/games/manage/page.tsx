@@ -20,16 +20,9 @@ export default async function ManageGamesPage() {
         <div>
           <h1 className="text-3xl font-bold">My Games</h1>
           <p className="mt-2 text-sm text-[var(--up-muted)]">
-            Manage the games you&apos;ve created. Edit details, cancel games, or view
-            participant info.
+            Manage the games you&apos;ve created. Edit details or mark games as completed.
           </p>
         </div>
-        <Link
-          href="/dashboard"
-          className="rounded-[10px] border border-[var(--up-border-mid)] px-4 py-2 font-medium text-[var(--up-text)] transition hover:border-[rgba(163,230,53,0.25)] hover:bg-[var(--up-accent-bg)] hover:text-[var(--up-accent)]"
-        >
-          Back to Dashboard
-        </Link>
       </div>
 
       {games.length === 0 ? (

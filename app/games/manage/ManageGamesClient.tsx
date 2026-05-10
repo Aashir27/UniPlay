@@ -2,17 +2,23 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { Game } from "@prisma/client";
 import { formatGameTime } from "@/lib/formatTime";
+import { createGameActionHandlers } from "@/src/components/games/gameActions";
 
 interface ManageGamesClientProps {
   games: Game[];
 }
 
 export default function ManageGamesClient({ games }: ManageGamesClientProps) {
+  const router = useRouter();
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [localGames, setLocalGames] = useState(games);
+  const [deletingGameID, setDeletingGameID] = useState<string | null>(null);
+  const [withdrawingGameID, setWithdrawingGameID] = useState<string | null>(null);
+  const [leaveConfirmGameID, setLeaveConfirmGameID] = useState<string | null>(null);
 
   async function patchStatus(gameID: string, status: "COMPLETED" | "CANCELLED") {
     setActionLoading(gameID + status);
@@ -48,11 +54,6 @@ export default function ManageGamesClient({ games }: ManageGamesClientProps) {
     patchStatus(gameID, "COMPLETED");
   };
 
-  const handleCancel = (gameID: string) => {
-    if (!confirm("Cancel this game? Players will no longer be able to join.")) return;
-    patchStatus(gameID, "CANCELLED");
-  };
-
   const statusBadge = (status: string) => {
     const styles: Record<string, string> = {
       DRAFT: "border border-[var(--up-border-mid)] bg-[var(--up-surface-2)] text-[var(--up-muted)]",
@@ -73,6 +74,30 @@ export default function ManageGamesClient({ games }: ManageGamesClientProps) {
   const isTerminal = (status: string) =>
     status === "CANCELLED" || status === "COMPLETED";
 
+  const createActionsForGame = (gameID: string) =>
+    createGameActionHandlers({
+      gameID,
+      router,
+      setError,
+      setIsDeleting: (isDeleting) =>
+        setDeletingGameID(isDeleting ? gameID : null),
+      setIsWithdrawing: (isWithdrawing) =>
+        setWithdrawingGameID(isWithdrawing ? gameID : null),
+      setShowLeaveConfirm: (visible) => {
+        if (!visible) setLeaveConfirmGameID(null);
+      },
+    });
+
+  const leaveConfirmGame = localGames.find(
+    (game) => game.gameID === leaveConfirmGameID,
+  );
+  const leaveConfirmActions = leaveConfirmGame
+    ? createActionsForGame(leaveConfirmGame.gameID)
+    : null;
+  const isLeaveConfirmBusy = leaveConfirmGame
+    ? withdrawingGameID === leaveConfirmGame.gameID
+    : false;
+
   return (
     <div className="space-y-4">
       {error && (
@@ -85,6 +110,10 @@ export default function ManageGamesClient({ games }: ManageGamesClientProps) {
         {localGames.map((game) => {
           const busy = actionLoading?.startsWith(game.gameID) ?? false;
           const terminal = isTerminal(game.status);
+          const isDeleting = deletingGameID === game.gameID;
+          const isWithdrawing = withdrawingGameID === game.gameID;
+          const { handleDelete } = createActionsForGame(game.gameID);
+          const actionsDisabled = busy || isDeleting || isWithdrawing;
 
           return (
             <div
@@ -110,25 +139,30 @@ export default function ManageGamesClient({ games }: ManageGamesClientProps) {
                     href={`/games/${game.gameID}/edit`}
                     className="rounded-[10px] border border-[var(--up-border-mid)] px-3 py-2 text-sm font-medium text-[var(--up-text)] transition hover:bg-[var(--up-accent-bg)] hover:text-[var(--up-accent)]"
                   >
-                    Edit
+                    Edit Game
                   </Link>
                   <button
                     onClick={() => handleComplete(game.gameID)}
-                    disabled={busy}
+                    disabled={actionsDisabled}
                     className="rounded-[10px] bg-[var(--up-accent)] px-3 py-2 text-sm font-medium text-[#0b0f1a] transition hover:bg-[var(--up-accent-dim)] disabled:opacity-50"
                   >
                     {actionLoading === game.gameID + "COMPLETED"
                       ? "Saving..."
-                      : "Mark Completed"}
+                      : "Mark as Completed"}
                   </button>
                   <button
-                    onClick={() => handleCancel(game.gameID)}
-                    disabled={busy}
+                    onClick={handleDelete}
+                    disabled={actionsDisabled}
+                    className="rounded-[10px] border border-[rgba(248,113,113,0.2)] bg-[var(--up-danger-bg)] px-3 py-2 text-sm font-medium text-[var(--up-danger)] transition hover:bg-[rgba(248,113,113,0.14)] disabled:opacity-50"
+                  >
+                    {isDeleting ? "Deleting..." : "Delete Game"}
+                  </button>
+                  <button
+                    onClick={() => setLeaveConfirmGameID(game.gameID)}
+                    disabled={actionsDisabled}
                     className="rounded-[10px] border border-[rgba(248,113,113,0.25)] px-3 py-2 text-sm font-medium text-[var(--up-danger)] transition hover:bg-[var(--up-danger-bg)] disabled:opacity-50"
                   >
-                    {actionLoading === game.gameID + "CANCELLED"
-                      ? "Cancelling..."
-                      : "Cancel"}
+                    {isWithdrawing ? "Leaving..." : "Leave Game"}
                   </button>
                 </div>
               )}
@@ -136,6 +170,38 @@ export default function ManageGamesClient({ games }: ManageGamesClientProps) {
           );
         })}
       </div>
+
+      {leaveConfirmGame && leaveConfirmActions && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="w-full max-w-md rounded-[18px] border border-[var(--up-border)] bg-[var(--up-surface)] p-6 shadow-2xl shadow-black/40">
+            <h3 className="text-lg font-semibold">Leave this game?</h3>
+            <p className="mt-2 text-sm text-[var(--up-muted)]">
+              You will be removed from the participant list and lose your spot.
+            </p>
+            <div className="mt-5 flex flex-wrap justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setLeaveConfirmGameID(null)}
+                className="rounded-[10px] border border-[var(--up-border-mid)] px-4 py-2 text-sm font-medium text-[var(--up-text)] transition hover:bg-[var(--up-accent-bg)]"
+              >
+                Keep spot
+              </button>
+              <button
+                type="button"
+                onClick={leaveConfirmActions.handleLeave}
+                className="rounded-[10px] bg-[var(--up-danger)] px-4 py-2 text-sm font-medium text-[#0b0f1a] transition hover:bg-[rgba(248,113,113,0.85)]"
+                disabled={isLeaveConfirmBusy}
+              >
+                {isLeaveConfirmBusy ? "Leaving..." : "Leave game"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

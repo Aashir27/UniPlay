@@ -112,6 +112,8 @@ export default function BrowseGamesClient({
     "Tennis",
     "Volleyball",
     "Table Tennis",
+    "Foosball",
+    "Swimming",
   ];
   const skillLevels = ["BEGINNER", "INTERMEDIATE", "ADVANCED"];
 

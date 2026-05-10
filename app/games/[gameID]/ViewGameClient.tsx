@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Game } from "@prisma/client";
 import { formatGameDateTime } from "@/lib/formatTime";
+import { createGameActionHandlers } from "@/src/components/games/gameActions";
 
 type Participant = {
   userID: string;
@@ -39,6 +40,15 @@ export default function ViewGameClient({
 
   const hasJoined = initialHasJoined;
 
+  const { handleDelete, handleLeave } = createGameActionHandlers({
+    gameID: game.gameID,
+    router,
+    setError,
+    setIsDeleting,
+    setIsWithdrawing,
+    setShowLeaveConfirm,
+  });
+
   const isFull =
     game.status === "FULL" || game.currentCount >= game.maxParticipants;
   const isOpen = game.status === "OPEN" && !isFull;
@@ -69,62 +79,6 @@ export default function ViewGameClient({
     }
   };
 
-  const handleLeave = async () => {
-    setShowLeaveConfirm(false);
-    setIsWithdrawing(true);
-    setError(null);
-    try {
-      const res = await fetch(`/api/games/${game.gameID}/withdraw`, {
-        method: "POST",
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        setError(data.error ?? "Failed to leave game");
-        return;
-      }
-      const data = await res.json();
-
-      // If game was deleted, redirect to games list
-      if (data.gameDeleted) {
-        router.push("/games");
-        router.refresh();
-      } else {
-        // Otherwise, refresh the current page to show updated state
-        router.push(`/games/${game.gameID}`);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
-    } finally {
-      setIsWithdrawing(false);
-    }
-  };
-
-  const handleDelete = async () => {
-    if (
-      !confirm(
-        "Delete this game? It will be permanently removed from the platform.",
-      )
-    )
-      return;
-    setIsDeleting(true);
-    setError(null);
-    try {
-      const res = await fetch(`/api/games/${game.gameID}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        setError(data.error ?? "Failed to delete game");
-        return;
-      }
-      router.push("/games");
-      router.refresh();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
-    } finally {
-      setIsDeleting(false);
-    }
-  };
 
   const statusConfig: Record<
     string,

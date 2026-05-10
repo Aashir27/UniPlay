@@ -109,6 +109,8 @@ export default function GameForm({
             { value: "Tennis", label: "Tennis" },
             { value: "Volleyball", label: "Volleyball" },
             { value: "Table Tennis", label: "Table Tennis" },
+            { value: "Foosball", label: "Foosball" },
+            { value: "Swimming", label: "Swimming" },
           ]}
           className="mt-1"
         />
