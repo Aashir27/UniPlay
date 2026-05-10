@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { useState, useEffect } from "react";
 import { formatGameTime } from "@/lib/formatTime";
+import { UserRow, type UserRowData } from "@/src/components/users/UserRow";
 
 type DashboardGame = {
   gameID: string;
@@ -12,6 +14,25 @@ type DashboardGame = {
   currentCount: number;
   maxParticipants: number;
   status: string;
+};
+
+type Recommendation = {
+  userID: string;
+  name: string;
+  sport: string;
+  skillLevel: string;
+};
+
+type SportProfile = {
+  sport: string;
+  skillLevel: string;
+};
+
+type UserProfile = {
+  userID: string;
+  name: string;
+  email: string;
+  sportProfiles: SportProfile[];
 };
 
 const SPORT_EMOJI: Record<string, string> = {
@@ -27,6 +48,7 @@ export function DashboardClient({
   userName,
   stats,
   openGames,
+  recommendations = [],
 }: {
   userName: string;
   stats: {
@@ -36,7 +58,49 @@ export function DashboardClient({
     notifications: number;
   };
   openGames: DashboardGame[];
+  recommendations?: Recommendation[];
 }) {
+  const [selectedProfileUserID, setSelectedProfileUserID] = useState<
+    string | null
+  >(null);
+  const [selectedProfile, setSelectedProfile] = useState<UserProfile | null>(
+    null,
+  );
+  const [loadingProfile, setLoadingProfile] = useState(false);
+
+  useEffect(() => {
+    if (!selectedProfileUserID) {
+      setSelectedProfile(null);
+      return;
+    }
+
+    async function fetchProfile() {
+      setLoadingProfile(true);
+      try {
+        const res = await fetch(`/api/users/${selectedProfileUserID}`);
+        if (res.ok) {
+          const data = await res.json();
+          setSelectedProfile(data.user);
+        }
+      } catch {
+        // silently fail
+      } finally {
+        setLoadingProfile(false);
+      }
+    }
+
+    void fetchProfile();
+  }, [selectedProfileUserID]);
+
+  if (selectedProfile && !loadingProfile) {
+    return (
+      <ViewProfileView
+        user={selectedProfile}
+        onBack={() => setSelectedProfileUserID(null)}
+      />
+    );
+  }
+
   const statCards = [
     { label: "Games joined", value: stats.gamesJoined, icon: <JoinIcon /> },
     { label: "Games hosted", value: stats.gamesHosted, icon: <HostIcon /> },
@@ -89,7 +153,10 @@ export function DashboardClient({
               Browse the latest games near you.
             </p>
           </div>
-          <Link href="/games" className="text-sm font-medium text-[var(--up-accent)]">
+          <Link
+            href="/games"
+            className="text-sm font-medium text-[var(--up-accent)]"
+          >
             See all →
           </Link>
         </div>
@@ -123,6 +190,49 @@ export function DashboardClient({
                 </Link>
               );
             })
+          )}
+        </div>
+      </section>
+
+      <section className="rounded-[28px] border border-[var(--up-border)] bg-[var(--up-surface)] p-5 sm:p-6">
+        <div className="mb-5 flex items-center justify-between gap-3">
+          <div>
+            <h2 className="font-[family:var(--font-display)] text-lg font-bold tracking-tight">
+              Player recommendations
+            </h2>
+            <p className="mt-1 text-sm text-[var(--up-muted)]">
+              Players matching your hosted game sports.
+            </p>
+          </div>
+          <Link
+            href="/invite-players"
+            className="text-sm font-medium text-[var(--up-accent)]"
+          >
+            Browse all →
+          </Link>
+        </div>
+
+        <div className="space-y-3">
+          {recommendations.length === 0 ? (
+            <p className="py-4 text-center text-sm text-[var(--up-muted)]">
+              Create a game to see player recommendations.
+            </p>
+          ) : (
+            <ul className="space-y-2">
+              {recommendations.map((rec) => (
+                <UserRow
+                  key={`${rec.userID}-${rec.sport}-${rec.skillLevel}`}
+                  user={{
+                    userID: rec.userID,
+                    name: rec.name,
+                    sport: rec.sport,
+                    skillLevel: rec.skillLevel,
+                  }}
+                  onViewProfile={setSelectedProfileUserID}
+                  showSkillLevel={true}
+                />
+              ))}
+            </ul>
           )}
         </div>
       </section>
@@ -172,6 +282,64 @@ function GameRow({
   );
 }
 
+function ViewProfileView({
+  user,
+  onBack,
+}: {
+  user: UserProfile;
+  onBack: () => void;
+}) {
+  return (
+    <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 px-6 py-10">
+      <section className="space-y-5 rounded-[20px] border border-[var(--up-border)] bg-[var(--up-surface)] p-5">
+        <div>
+          <h2 className="font-[family:var(--font-display)] text-2xl font-bold">
+            {user.name}
+          </h2>
+          <p className="mt-1 text-sm text-[var(--up-muted)]">{user.email}</p>
+        </div>
+
+        <div>
+          <h3 className="font-semibold">Sports Profile</h3>
+          {user.sportProfiles.length === 0 ? (
+            <p className="mt-2 text-sm text-[var(--up-muted)]">
+              No sports added yet.
+            </p>
+          ) : (
+            <ul className="mt-3 space-y-2">
+              {user.sportProfiles.map((profile, idx) => {
+                const skillLabel =
+                  profile.skillLevel === "BEGINNER"
+                    ? "Beginner"
+                    : profile.skillLevel === "INTERMEDIATE"
+                      ? "Intermediate"
+                      : "Advanced";
+                return (
+                  <li
+                    key={idx}
+                    className="flex items-center justify-between rounded-[12px] border border-[var(--up-border)] bg-[var(--up-surface-2)] px-3 py-2"
+                  >
+                    <span className="text-sm font-medium">{profile.sport}</span>
+                    <span className="text-xs text-[var(--up-muted)]">
+                      {skillLabel}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+
+        <button
+          onClick={onBack}
+          className="rounded-[10px] border border-[var(--up-border-mid)] px-4 py-2 font-medium text-[var(--up-text)] transition hover:border-[rgba(163,230,53,0.25)] hover:bg-[var(--up-accent-bg)] hover:text-[var(--up-accent)]"
+        >
+          Back
+        </button>
+      </section>
+    </div>
+  );
+}
 
 function BellIcon() {
   return (
@@ -245,4 +413,3 @@ function JoinIcon() {
     </svg>
   );
 }
-

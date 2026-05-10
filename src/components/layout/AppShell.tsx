@@ -24,6 +24,7 @@ const navItems = [
   { href: "/profile", label: "My profile", icon: <UserIcon /> },
   { href: "/games/new", label: "Post a game", icon: <PlusIcon /> },
   { href: "/games/manage", label: "My games", icon: <ListIcon /> },
+  { href: "/invite-players", label: "Invite players", icon: <PeopleIcon /> },
 ];
 
 export function AppShell({ children, userName }: AppShellProps) {
@@ -70,7 +71,8 @@ export function AppShell({ children, userName }: AppShellProps) {
       if (
         bellRef.current?.contains(e.target as Node) ||
         panelRef.current?.contains(e.target as Node)
-      ) return;
+      )
+        return;
       setNotifOpen(false);
     }
     if (notifOpen) document.addEventListener("mousedown", onMouseDown);
@@ -116,7 +118,10 @@ export function AppShell({ children, userName }: AppShellProps) {
   return (
     <div className="min-h-screen bg-[var(--up-bg)] text-[var(--up-text)] flex">
       <aside className="sticky top-0 flex h-screen w-[220px] shrink-0 flex-col border-r border-[var(--up-border)] bg-[var(--up-surface)] px-4 py-6">
-        <Link href={userName ? "/dashboard" : "/"} className="mb-7 flex items-center gap-2.5 px-2">
+        <Link
+          href={userName ? "/dashboard" : "/"}
+          className="mb-7 flex items-center gap-2.5 px-2"
+        >
           <LogoMark />
         </Link>
 
@@ -145,7 +150,9 @@ export function AppShell({ children, userName }: AppShellProps) {
                   : "border-transparent text-[var(--up-muted)] hover:border-[var(--up-border-mid)] hover:bg-[var(--up-accent-bg)] hover:text-[var(--up-text)]"
               }`}
             >
-              <span className={`relative shrink-0 ${notifOpen ? "text-[var(--up-accent)]" : "text-[var(--up-muted)]"}`}>
+              <span
+                className={`relative shrink-0 ${notifOpen ? "text-[var(--up-accent)]" : "text-[var(--up-muted)]"}`}
+              >
                 <BellIcon />
                 {count > 0 && (
                   <span className="absolute -top-[6px] -right-[6px] flex h-[14px] min-w-[14px] items-center justify-center rounded-full bg-[var(--up-accent)] px-[3px] text-[0.5rem] font-bold leading-none text-[#0b0f1a]">
@@ -219,9 +226,13 @@ export function AppShell({ children, userName }: AppShellProps) {
           {/* List */}
           <div className="max-h-[420px] overflow-y-auto">
             {notifLoading && count === 0 ? (
-              <p className="py-10 text-center text-xs text-[var(--up-muted)]">Loading…</p>
+              <p className="py-10 text-center text-xs text-[var(--up-muted)]">
+                Loading…
+              </p>
             ) : count === 0 ? (
-              <p className="py-10 text-center text-xs text-[var(--up-muted)]">No notifications</p>
+              <p className="py-10 text-center text-xs text-[var(--up-muted)]">
+                No notifications
+              </p>
             ) : (
               notifications.map((n) => (
                 <NotifRow key={n.notifID} notification={n} />
@@ -261,12 +272,18 @@ function NotifRow({ notification }: { notification: NotificationItem }) {
 
 function notifIcon(type: string): string {
   switch (type) {
-    case "JOIN_REQUEST": return "🙋";
-    case "JOIN_CONFIRM": return "✏️";
-    case "WITHDRAWAL": return "🚪";
-    case "CANCELLATION": return "❌";
-    case "REMINDER": return "⏰";
-    default: return "🔔";
+    case "JOIN_REQUEST":
+      return "🙋";
+    case "JOIN_CONFIRM":
+      return "✏️";
+    case "WITHDRAWAL":
+      return "🚪";
+    case "CANCELLATION":
+      return "❌";
+    case "REMINDER":
+      return "⏰";
+    default:
+      return "🔔";
   }
 }
 
@@ -296,7 +313,11 @@ function NavLink({
           : "border-transparent text-[var(--up-muted)] hover:border-[var(--up-border-mid)] hover:bg-[var(--up-accent-bg)] hover:text-[var(--up-text)]"
       }`}
     >
-      <span className={active ? "text-[var(--up-accent)]" : "text-[var(--up-muted)]"}>
+      <span
+        className={
+          active ? "text-[var(--up-accent)]" : "text-[var(--up-muted)]"
+        }
+      >
         {icon}
       </span>
       {label}
@@ -321,7 +342,16 @@ function LogoMark() {
 
 function HomeIcon() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
       <polyline points="9 22 9 12 15 12 15 22" />
     </svg>
@@ -330,7 +360,16 @@ function HomeIcon() {
 
 function GamepadIcon() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <rect x="2" y="6" width="20" height="12" rx="4" />
       <line x1="6" y1="12" x2="10" y2="12" />
       <line x1="8" y1="10" x2="8" y2="14" />
@@ -342,7 +381,16 @@ function GamepadIcon() {
 
 function UserIcon() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
       <circle cx="12" cy="7" r="4" />
     </svg>
@@ -351,7 +399,16 @@ function UserIcon() {
 
 function BellIcon() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
       <path d="M13.73 21a2 2 0 0 1-3.46 0" />
     </svg>
@@ -360,7 +417,15 @@ function BellIcon() {
 
 function PlusIcon() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+    >
       <line x1="12" y1="5" x2="12" y2="19" />
       <line x1="5" y1="12" x2="19" y2="12" />
     </svg>
@@ -369,13 +434,41 @@ function PlusIcon() {
 
 function ListIcon() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+    >
       <line x1="8" y1="6" x2="21" y2="6" />
       <line x1="8" y1="12" x2="21" y2="12" />
       <line x1="8" y1="18" x2="21" y2="18" />
       <line x1="3" y1="6" x2="3.01" y2="6" />
       <line x1="3" y1="12" x2="3.01" y2="12" />
       <line x1="3" y1="18" x2="3.01" y2="18" />
+    </svg>
+  );
+}
+
+function PeopleIcon() {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
     </svg>
   );
 }

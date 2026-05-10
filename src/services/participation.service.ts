@@ -172,12 +172,12 @@ export async function joinGame(
 export async function cancelParticipation(
   input: CancelParticipationInput,
   db: PrismaClient = prisma,
-): Promise<void> {
+): Promise<{ gameDeleted: boolean }> {
   const maxRetries = 3;
 
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
-      await db.$transaction(
+      return await db.$transaction(
         async (tx) => {
           const participation = await tx.participation.findUnique({
             where: {
@@ -193,25 +193,103 @@ export async function cancelParticipation(
             throw new Error("Participation not found");
           }
 
-          await tx.participation.update({
-            where: {
-              userID_gameID: { userID: input.userID, gameID: input.gameID },
-            },
-            data: { status: ParticipationStatus.CANCELLED },
-          });
-
           const game = await tx.game.findUnique({
             where: { gameID: input.gameID },
             select: {
+              gameID: true,
+              creatorID: true,
+              sport: true,
+              location: true,
               currentCount: true,
               maxParticipants: true,
               status: true,
+              participations: {
+                where: {
+                  status: { in: [ParticipationStatus.PENDING, ParticipationStatus.ACCEPTED] },
+                  userID: { not: input.userID },
+                },
+                orderBy: { joinedAt: "asc" },
+                select: { userID: true, joinedAt: true },
+              },
             },
           });
 
           if (!game) {
             throw new Error("Game not found");
           }
+
+          const otherPlayersCount = game.participations.length;
+          const isCreator = game.creatorID === input.userID;
+
+          // Case 1: Creator leaves and other players exist -> transfer host to first player
+          if (isCreator && otherPlayersCount > 0) {
+            const newCreator = game.participations[0];
+            
+            await tx.participation.update({
+              where: {
+                userID_gameID: { userID: input.userID, gameID: input.gameID },
+              },
+              data: { status: ParticipationStatus.CANCELLED },
+            });
+
+            const nextCount = Math.max(game.currentCount - 1, 0);
+            const nextStatus =
+              game.status === GameStatus.FULL &&
+              nextCount < game.maxParticipants
+                ? GameStatus.OPEN
+                : game.status;
+
+            await tx.game.update({
+              where: { gameID: input.gameID },
+              data: {
+                currentCount: nextCount,
+                status: nextStatus,
+                creatorID: newCreator.userID,
+              },
+            });
+
+            const withdrawer = await tx.user.findUnique({
+              where: { userID: input.userID },
+              select: { name: true },
+            });
+            const withdrawerName = withdrawer?.name ?? "A player";
+
+            const newCreatorUser = await tx.user.findUnique({
+              where: { userID: newCreator.userID },
+              select: { name: true },
+            });
+            const newCreatorName = newCreatorUser?.name ?? "A player";
+
+            // Notify new host
+            await tx.notification.create({
+              data: {
+                recipientID: newCreator.userID,
+                type: NotificationType.JOIN_CONFIRM,
+                message: `You are now the host of the ${game.sport} game at ${game.location}. ${withdrawerName} left the game.`,
+                relatedGameID: input.gameID,
+              },
+            });
+
+            return { gameDeleted: false };
+          }
+
+          // Case 2 & 3: Creator leaves with no other players, or last remaining player leaves -> delete game
+          if ((isCreator && otherPlayersCount === 0) || otherPlayersCount === 0) {
+            // Delete the game
+            await tx.game.delete({
+              where: { gameID: input.gameID },
+            });
+
+            return { gameDeleted: true };
+          }
+
+          // Case 4: Regular participant leaves -> just mark as cancelled
+          await tx.participation.update({
+            where: {
+              userID_gameID: { userID: input.userID, gameID: input.gameID },
+            },
+            data: { status: ParticipationStatus.CANCELLED },
+          });
 
           const nextCount = Math.max(game.currentCount - 1, 0);
           const nextStatus =
@@ -228,31 +306,25 @@ export async function cancelParticipation(
             },
           });
 
-          // Notify creator that a participant withdrew (skip if withdrawer is the creator)
-          const fullGame = await tx.game.findUnique({
-            where: { gameID: input.gameID },
-            select: { creatorID: true, sport: true, location: true },
+          // Notify creator that a participant withdrew
+          const withdrawer = await tx.user.findUnique({
+            where: { userID: input.userID },
+            select: { name: true },
           });
-          if (fullGame && fullGame.creatorID !== input.userID) {
-            const withdrawer = await tx.user.findUnique({
-              where: { userID: input.userID },
-              select: { name: true },
-            });
-            const withdrawerName = withdrawer?.name ?? "A player";
-            await tx.notification.create({
-              data: {
-                recipientID: fullGame.creatorID,
-                type: NotificationType.WITHDRAWAL,
-                message: `${withdrawerName} left your ${fullGame.sport} game at ${fullGame.location}.`,
-                relatedGameID: input.gameID,
-              },
-            });
-          }
+          const withdrawerName = withdrawer?.name ?? "A player";
+          await tx.notification.create({
+            data: {
+              recipientID: game.creatorID,
+              type: NotificationType.WITHDRAWAL,
+              message: `${withdrawerName} left your ${game.sport} game at ${game.location}.`,
+              relatedGameID: input.gameID,
+            },
+          });
+
+          return { gameDeleted: false };
         },
         { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
       );
-
-      return;
     } catch (error) {
       const isLastAttempt = attempt === maxRetries - 1;
       if (!isLastAttempt && isRetryableTransactionError(error)) {
@@ -261,4 +333,6 @@ export async function cancelParticipation(
       throw error;
     }
   }
+
+  throw new Error("Cancel participation failed after retries");
 }

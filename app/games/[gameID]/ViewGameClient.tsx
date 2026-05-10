@@ -82,7 +82,16 @@ export default function ViewGameClient({
         setError(data.error ?? "Failed to leave game");
         return;
       }
-      router.push(`/games/${game.gameID}`);
+      const data = await res.json();
+
+      // If game was deleted, redirect to games list
+      if (data.gameDeleted) {
+        router.push("/games");
+        router.refresh();
+      } else {
+        // Otherwise, refresh the current page to show updated state
+        router.push(`/games/${game.gameID}`);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
@@ -135,7 +144,8 @@ export default function ViewGameClient({
     },
     CANCELLED: {
       label: "Cancelled",
-      badge: "border border-[rgba(248,113,113,0.2)] bg-[var(--up-danger-bg)] text-[var(--up-danger)]",
+      badge:
+        "border border-[rgba(248,113,113,0.2)] bg-[var(--up-danger-bg)] text-[var(--up-danger)]",
       description: "This game has been cancelled.",
     },
     COMPLETED: {
@@ -175,7 +185,9 @@ export default function ViewGameClient({
           <h1 className="font-[family:var(--font-display)] text-3xl font-bold tracking-tight">
             {game.sport}
           </h1>
-          <span className={`inline-block rounded-full px-3 py-1 text-sm font-semibold ${cfg.badge}`}>
+          <span
+            className={`inline-block rounded-full px-3 py-1 text-sm font-semibold ${cfg.badge}`}
+          >
             {cfg.label}
           </span>
         </div>
@@ -251,7 +263,9 @@ export default function ViewGameClient({
                       <span className="text-sm font-medium">
                         {p.user.name || p.user.email}
                         {isMe && (
-                          <span className="ml-2 text-xs text-[var(--up-muted)]">(you)</span>
+                          <span className="ml-2 text-xs text-[var(--up-muted)]">
+                            (you)
+                          </span>
                         )}
                       </span>
                     </li>

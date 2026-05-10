@@ -28,12 +28,11 @@ export async function POST(
   }
 
   try {
-    await cancelParticipation({ userID, gameID });
+    const result = await cancelParticipation({ userID, gameID });
+    return NextResponse.json({ ok: true, gameDeleted: result.gameDeleted }, { status: 200 });
   } catch (err: unknown) {
     const message =
       err instanceof Error ? err.message : "Failed to leave game";
     return NextResponse.json({ error: message }, { status: 400 });
   }
-
-  return NextResponse.json({ ok: true }, { status: 200 });
 }
