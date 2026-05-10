@@ -5,11 +5,18 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Game } from "@prisma/client";
 import { Select } from "@/src/components/ui/Select";
-import { formatGameTime } from "@/lib/formatTime";
+import { formatGameDateTime } from "@/lib/formatTime";
 
 interface BrowseGamesClientProps {
   initialGames: Game[];
 }
+
+const parseTimeToMinutes = (value: string): number | null => {
+  if (!value) return null;
+  const [hours, minutes] = value.split(":").map(Number);
+  if (Number.isNaN(hours) || Number.isNaN(minutes)) return null;
+  return hours * 60 + minutes;
+};
 
 export default function BrowseGamesClient({
   initialGames,
@@ -18,7 +25,8 @@ export default function BrowseGamesClient({
 
   const [sportFilter, setSportFilter] = useState("");
   const [skillFilter, setSkillFilter] = useState("");
-  const [locationFilter, setLocationFilter] = useState("");
+  const [timeFrom, setTimeFrom] = useState("");
+  const [timeTo, setTimeTo] = useState("");
   const [dateFilter, setDateFilter] = useState("");
   const [keyword, setKeyword] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
@@ -53,20 +61,35 @@ export default function BrowseGamesClient({
   }, [initialGames, keyword]);
 
   const filteredGames = useMemo(() => {
+    const startMinutes = parseTimeToMinutes(timeFrom);
+    const endMinutes = parseTimeToMinutes(timeTo);
+
     return initialGames.filter((game) => {
       if (sportFilter && game.sport !== sportFilter) return false;
       if (skillFilter && game.skillLevel !== skillFilter) return false;
-      if (locationFilter.trim()) {
-        if (
-          !game.location
-            .toLowerCase()
-            .includes(locationFilter.trim().toLowerCase())
-        )
-          return false;
-      }
       if (dateFilter) {
         const gameDate = new Date(game.dateTime).toISOString().slice(0, 10);
         if (gameDate !== dateFilter) return false;
+      }
+      if (startMinutes !== null || endMinutes !== null) {
+        const gameDate = new Date(game.dateTime);
+        const gameMinutes = gameDate.getHours() * 60 + gameDate.getMinutes();
+
+        if (startMinutes !== null && endMinutes !== null) {
+          if (startMinutes <= endMinutes) {
+            if (gameMinutes < startMinutes || gameMinutes > endMinutes)
+              return false;
+          } else if (
+            gameMinutes < startMinutes &&
+            gameMinutes > endMinutes
+          ) {
+            return false;
+          }
+        } else if (startMinutes !== null && gameMinutes < startMinutes) {
+          return false;
+        } else if (endMinutes !== null && gameMinutes > endMinutes) {
+          return false;
+        }
       }
       if (keyword.trim()) {
         const k = keyword.trim().toLowerCase();
@@ -80,7 +103,7 @@ export default function BrowseGamesClient({
       }
       return true;
     });
-  }, [initialGames, sportFilter, skillFilter, locationFilter, dateFilter, keyword]);
+  }, [initialGames, sportFilter, skillFilter, timeFrom, timeTo, dateFilter, keyword]);
 
   const sports = [
     "Cricket",
@@ -122,7 +145,8 @@ export default function BrowseGamesClient({
   function clearAllFilters() {
     setSportFilter("");
     setSkillFilter("");
-    setLocationFilter("");
+    setTimeFrom("");
+    setTimeTo("");
     setDateFilter("");
     setKeyword("");
     setShowDropdown(false);
@@ -130,7 +154,12 @@ export default function BrowseGamesClient({
   }
 
   const hasActiveFilters =
-    sportFilter || skillFilter || locationFilter || dateFilter || keyword.trim();
+    sportFilter ||
+    skillFilter ||
+    timeFrom ||
+    timeTo ||
+    dateFilter ||
+    keyword.trim();
 
   const skillLabel = (level: string) =>
     level === "BEGINNER"
@@ -138,6 +167,9 @@ export default function BrowseGamesClient({
       : level === "INTERMEDIATE"
         ? "Intermediate"
         : "Advanced";
+
+  const filterInputClass =
+    "w-full rounded-[12px] border border-[var(--up-border-mid)] bg-[var(--up-surface-2)] px-3 py-2 text-sm text-[var(--up-text)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(163,230,53,0.35)] hover:border-[rgba(163,230,53,0.35)] appearance-none [color-scheme:dark]";
 
   return (
     <div className="space-y-6">
@@ -157,7 +189,7 @@ export default function BrowseGamesClient({
           <input
             type="text"
             value={keyword}
-            placeholder="Search by sport, location, or skill level…"
+            placeholder="Search by sport, skill level, date or time"
             className="flex-1 bg-transparent text-sm text-[var(--up-text)] outline-none placeholder:text-[var(--up-muted)]"
             onChange={(e) => {
               setKeyword(e.target.value);
@@ -289,17 +321,27 @@ export default function BrowseGamesClient({
           </div>
 
           <div>
-            <label htmlFor="location" className="block text-sm font-medium">
-              Location
+            <label htmlFor="timeFrom" className="block text-sm font-medium">
+              Time Range
             </label>
-            <input
-              id="location"
-              type="text"
-              value={locationFilter}
-              onChange={(e) => setLocationFilter(e.target.value)}
-              placeholder="e.g. Court 3"
-              className="mt-2 w-full rounded-lg border border-[var(--up-border-mid)] bg-[var(--up-surface-2)] px-3 py-2 text-sm text-[var(--up-text)] placeholder:text-[var(--up-muted)]"
-            />
+            <div className="mt-2 flex flex-wrap gap-2">
+              <input
+                id="timeFrom"
+                type="time"
+                value={timeFrom}
+                onChange={(e) => setTimeFrom(e.target.value)}
+                aria-label="Start time"
+                className={`${filterInputClass} min-w-[9.5rem] flex-1`}
+              />
+              <input
+                id="timeTo"
+                type="time"
+                value={timeTo}
+                onChange={(e) => setTimeTo(e.target.value)}
+                aria-label="End time"
+                className={`${filterInputClass} min-w-[9.5rem] flex-1`}
+              />
+            </div>
           </div>
 
           <div>
@@ -311,7 +353,7 @@ export default function BrowseGamesClient({
               type="date"
               value={dateFilter}
               onChange={(e) => setDateFilter(e.target.value)}
-              className="mt-2 w-full rounded-lg border border-[var(--up-border-mid)] bg-[var(--up-surface-2)] px-3 py-2 text-sm text-[var(--up-text)]"
+              className={`mt-2 ${filterInputClass}`}
             />
           </div>
         </div>
@@ -366,7 +408,7 @@ export default function BrowseGamesClient({
                   </span>
                 </div>
                 <p className="mt-1 text-sm text-[var(--up-muted)]">
-                  {formatGameTime(new Date(game.dateTime))}
+                  {formatGameDateTime(new Date(game.dateTime))}
                 </p>
                 <p className="mt-1 text-xs text-[var(--up-muted)]">{game.location}</p>
                 <div className="mt-3 flex items-center justify-between text-xs font-medium text-[var(--up-muted)]">

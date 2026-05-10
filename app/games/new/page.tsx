@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 
 import { authOptions } from "@/src/lib/auth";
 import GameForm from "@/src/components/games/GameForm";
-import BackButton from "./BackButton";
 
 export default async function NewGamePage() {
   const session = await getServerSession(authOptions);
@@ -24,7 +23,6 @@ export default async function NewGamePage() {
 
       <GameForm />
 
-      <BackButton />
     </main>
   );
 }
