@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { formatGameTime } from "@/lib/formatTime";
-import { UserRow, type UserRowData } from "@/src/components/users/UserRow";
+import { UserRow } from "@/src/components/users/UserRow";
 
 type DashboardGame = {
   gameID: string;

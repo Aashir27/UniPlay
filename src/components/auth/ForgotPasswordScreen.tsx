@@ -1,10 +1,8 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { useRouter } from "next/navigation";
 
 export function ForgotPasswordScreen() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
@@ -46,7 +44,7 @@ export function ForgotPasswordScreen() {
   return (
     <div className="max-w-md">
       <h2 className="text-2xl font-bold">Forgot your password?</h2>
-      <p className="mt-2 text-sm text-[var(--up-muted)]">Enter your email and we'll send a link to reset your password.</p>
+      <p className="mt-2 text-sm text-[var(--up-muted)]">Enter your email and we&apos;ll send a link to reset your password.</p>
 
       <form onSubmit={onSubmit} className="mt-4 space-y-3">
         <div>

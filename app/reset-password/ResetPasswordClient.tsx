@@ -1,6 +1,5 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import { ResetPasswordScreen } from "@/src/components/auth/ResetPasswordScreen";
 
 export default function ResetPasswordClient({ token, uid }: { token?: string; uid?: string }) {

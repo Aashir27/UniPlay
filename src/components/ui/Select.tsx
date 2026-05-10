@@ -39,11 +39,13 @@ export function Select({
   const displayLabel = selected?.label ?? placeholder ?? "Select";
   const listId = id ? `${id}-list` : undefined;
 
-  useEffect(() => {
-    if (!open) return;
-    const idx = options.findIndex((opt) => opt.value === value);
-    setActiveIdx(idx >= 0 ? idx : 0);
-  }, [open, options, value]);
+  const openWithActiveIdx = () => {
+    if (!disabled) {
+      const idx = options.findIndex((opt) => opt.value === value);
+      setActiveIdx(idx >= 0 ? idx : 0);
+      setOpen((v) => !v);
+    }
+  };
 
   useEffect(() => {
     if (!open) return;
@@ -110,7 +112,7 @@ export function Select({
         aria-expanded={open}
         aria-controls={listId}
         disabled={disabled}
-        onClick={() => setOpen((v) => !v)}
+        onClick={openWithActiveIdx}
         onKeyDown={handleKeyDown}
         className={`relative w-full rounded-[12px] border border-[var(--up-border-mid)] bg-[var(--up-surface-2)] px-3 py-2 pr-9 text-left text-[var(--up-text)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(163,230,53,0.35)] ${
           disabled

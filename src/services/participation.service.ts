@@ -254,12 +254,6 @@ export async function cancelParticipation(
             });
             const withdrawerName = withdrawer?.name ?? "A player";
 
-            const newCreatorUser = await tx.user.findUnique({
-              where: { userID: newCreator.userID },
-              select: { name: true },
-            });
-            const newCreatorName = newCreatorUser?.name ?? "A player";
-
             // Notify new host
             await tx.notification.create({
               data: {

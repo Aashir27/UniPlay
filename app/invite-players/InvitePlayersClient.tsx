@@ -29,7 +29,6 @@ const SPORTS = [
   "Volleyball",
   "Tennis",
 ];
-const SKILL_LEVELS = ["BEGINNER", "INTERMEDIATE", "ADVANCED"];
 
 export function InvitePlayersClient() {
   const [users, setUsers] = useState<User[]>([]);
