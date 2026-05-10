@@ -97,6 +97,21 @@ export async function joinGame(
               },
             });
 
+            const rejoiner = await tx.user.findUnique({
+              where: { userID: input.userID },
+              select: { name: true },
+            });
+            const rejoinerName = rejoiner?.name ?? "A player";
+
+            await tx.notification.create({
+              data: {
+                recipientID: game.creatorID,
+                type: NotificationType.JOIN_REQUEST,
+                message: `${rejoinerName} joined your ${game.sport} game at ${game.location}.`,
+                relatedGameID: game.gameID,
+              },
+            });
+
             return rejoined;
           }
 
@@ -120,11 +135,17 @@ export async function joinGame(
             },
           });
 
+          const joiner = await tx.user.findUnique({
+            where: { userID: input.userID },
+            select: { name: true },
+          });
+          const joinerName = joiner?.name ?? "A player";
+
           await tx.notification.create({
             data: {
               recipientID: game.creatorID,
               type: NotificationType.JOIN_REQUEST,
-              message: "A player requested to join your game.",
+              message: `${joinerName} joined your ${game.sport} game at ${game.location}.`,
               relatedGameID: game.gameID,
             },
           });
@@ -206,6 +227,27 @@ export async function cancelParticipation(
               status: nextStatus,
             },
           });
+
+          // Notify creator that a participant withdrew (skip if withdrawer is the creator)
+          const fullGame = await tx.game.findUnique({
+            where: { gameID: input.gameID },
+            select: { creatorID: true, sport: true, location: true },
+          });
+          if (fullGame && fullGame.creatorID !== input.userID) {
+            const withdrawer = await tx.user.findUnique({
+              where: { userID: input.userID },
+              select: { name: true },
+            });
+            const withdrawerName = withdrawer?.name ?? "A player";
+            await tx.notification.create({
+              data: {
+                recipientID: fullGame.creatorID,
+                type: NotificationType.WITHDRAWAL,
+                message: `${withdrawerName} left your ${fullGame.sport} game at ${fullGame.location}.`,
+                relatedGameID: input.gameID,
+              },
+            });
+          }
         },
         { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
       );

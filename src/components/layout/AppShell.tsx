@@ -3,10 +3,19 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
+import { useState, useEffect, useRef, useCallback } from "react";
 
 type AppShellProps = {
   children: React.ReactNode;
   userName?: string | null;
+};
+
+type NotificationItem = {
+  notifID: string;
+  type: string;
+  message: string;
+  isRead: boolean;
+  createdAt: string;
 };
 
 const navItems = [
@@ -15,7 +24,6 @@ const navItems = [
   { href: "/profile", label: "My profile", icon: <UserIcon /> },
   { href: "/games/new", label: "Post a game", icon: <PlusIcon /> },
   { href: "/games/manage", label: "My games", icon: <ListIcon /> },
-  { href: "/notifications", label: "Notifications", icon: <BellIcon /> },
 ];
 
 export function AppShell({ children, userName }: AppShellProps) {
@@ -27,6 +35,67 @@ export function AppShell({ children, userName }: AppShellProps) {
     .slice(0, 2)
     .join("")
     .toUpperCase();
+
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [notifLoading, setNotifLoading] = useState(false);
+  const [clearing, setClearing] = useState(false);
+  const bellRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const [panelTop, setPanelTop] = useState(0);
+
+  const fetchNotifications = useCallback(async () => {
+    try {
+      const res = await fetch("/api/notifications");
+      if (res.ok) {
+        const data = await res.json();
+        setNotifications(data.notifications ?? []);
+      }
+    } catch {
+      // silently ignore network errors
+    }
+  }, []);
+
+  // Fetch count on mount and every 60 s
+  useEffect(() => {
+    if (!userName) return;
+    fetchNotifications();
+    const id = setInterval(fetchNotifications, 60_000);
+    return () => clearInterval(id);
+  }, [userName, fetchNotifications]);
+
+  // Close panel on outside click
+  useEffect(() => {
+    function onMouseDown(e: MouseEvent) {
+      if (
+        bellRef.current?.contains(e.target as Node) ||
+        panelRef.current?.contains(e.target as Node)
+      ) return;
+      setNotifOpen(false);
+    }
+    if (notifOpen) document.addEventListener("mousedown", onMouseDown);
+    return () => document.removeEventListener("mousedown", onMouseDown);
+  }, [notifOpen]);
+
+  function handleBellClick() {
+    if (!notifOpen) {
+      const rect = bellRef.current?.getBoundingClientRect();
+      setPanelTop(rect?.top ?? 120);
+      setNotifLoading(true);
+      fetchNotifications().finally(() => setNotifLoading(false));
+    }
+    setNotifOpen((v) => !v);
+  }
+
+  async function handleClear() {
+    setClearing(true);
+    try {
+      await fetch("/api/notifications", { method: "DELETE" });
+      setNotifications([]);
+    } finally {
+      setClearing(false);
+    }
+  }
 
   if (!userName) {
     return (
@@ -41,6 +110,8 @@ export function AppShell({ children, userName }: AppShellProps) {
     router.push("/");
     router.refresh();
   }
+
+  const count = notifications.length;
 
   return (
     <div className="min-h-screen bg-[var(--up-bg)] text-[var(--up-text)] flex">
@@ -62,6 +133,29 @@ export function AppShell({ children, userName }: AppShellProps) {
               active={isActivePath(pathname, item.href)}
             />
           ))}
+
+          {/* Notification bell nav item */}
+          <div ref={bellRef}>
+            <button
+              type="button"
+              onClick={handleBellClick}
+              className={`flex w-full items-center gap-2.5 rounded-[10px] border px-3 py-2 text-sm font-medium transition ${
+                notifOpen
+                  ? "border-[rgba(163,230,53,0.16)] bg-[var(--up-accent-bg)] text-[var(--up-accent)]"
+                  : "border-transparent text-[var(--up-muted)] hover:border-[var(--up-border-mid)] hover:bg-[var(--up-accent-bg)] hover:text-[var(--up-text)]"
+              }`}
+            >
+              <span className={`relative shrink-0 ${notifOpen ? "text-[var(--up-accent)]" : "text-[var(--up-muted)]"}`}>
+                <BellIcon />
+                {count > 0 && (
+                  <span className="absolute -top-[6px] -right-[6px] flex h-[14px] min-w-[14px] items-center justify-center rounded-full bg-[var(--up-accent)] px-[3px] text-[0.5rem] font-bold leading-none text-[#0b0f1a]">
+                    {count > 9 ? "9+" : count}
+                  </span>
+                )}
+              </span>
+              Notifications
+            </button>
+          </div>
         </nav>
 
         <div className="mt-auto border-t border-[var(--up-border)] px-2 pt-4">
@@ -102,9 +196,78 @@ export function AppShell({ children, userName }: AppShellProps) {
         </div>
       </aside>
 
+      {/* Notification panel — fixed, appears to the right of sidebar */}
+      {notifOpen && (
+        <div
+          ref={panelRef}
+          className="fixed z-50 w-[320px] overflow-hidden rounded-[16px] border border-[var(--up-border)] bg-[var(--up-surface)] shadow-2xl shadow-black/40"
+          style={{ left: "228px", top: `${panelTop}px` }}
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between border-b border-[var(--up-border)] px-4 py-3">
+            <span className="text-sm font-semibold">Notifications</span>
+            <button
+              type="button"
+              onClick={handleClear}
+              disabled={clearing || count === 0}
+              className="text-[0.72rem] font-medium text-[var(--up-muted)] transition hover:text-[var(--up-danger)] disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              {clearing ? "Clearing…" : "Clear all"}
+            </button>
+          </div>
+
+          {/* List */}
+          <div className="max-h-[420px] overflow-y-auto">
+            {notifLoading && count === 0 ? (
+              <p className="py-10 text-center text-xs text-[var(--up-muted)]">Loading…</p>
+            ) : count === 0 ? (
+              <p className="py-10 text-center text-xs text-[var(--up-muted)]">No notifications</p>
+            ) : (
+              notifications.map((n) => (
+                <NotifRow key={n.notifID} notification={n} />
+              ))
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="min-w-0 flex-1">{children}</div>
     </div>
   );
+}
+
+function NotifRow({ notification }: { notification: NotificationItem }) {
+  const icon = notifIcon(notification.type);
+  const time = new Date(notification.createdAt).toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+
+  return (
+    <div className="flex gap-3 border-b border-[var(--up-border)] px-4 py-3 last:border-0">
+      <span className="mt-0.5 shrink-0 text-base">{icon}</span>
+      <div className="min-w-0">
+        <p className="text-[0.8rem] leading-snug text-[var(--up-text)]">
+          {notification.message}
+        </p>
+        <p className="mt-1 text-[0.68rem] text-[var(--up-muted)]">{time}</p>
+      </div>
+    </div>
+  );
+}
+
+function notifIcon(type: string): string {
+  switch (type) {
+    case "JOIN_REQUEST": return "🙋";
+    case "JOIN_CONFIRM": return "✏️";
+    case "WITHDRAWAL": return "🚪";
+    case "CANCELLATION": return "❌";
+    case "REMINDER": return "⏰";
+    default: return "🔔";
+  }
 }
 
 function isActivePath(pathname: string, href: string): boolean {
