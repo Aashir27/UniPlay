@@ -84,7 +84,7 @@ model Game {
   currentCount    Int        @default(0)
   status          GameStatus @default(DRAFT)
 
-  creator        User            @relation("GameCreator", fields: [creatorID], references: [userID], onDelete: Restrict)
+  creator        User            @relation("GameCreator", fields: [creatorID], references: [userID], onDelete: Cascade)
   participations Participation[]
   notifications  Notification[]  @relation("NotificationGame")
 

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { formatGameTime } from "@/lib/formatTime";
 
 type DashboardGame = {
   gameID: string;
@@ -107,11 +108,7 @@ export function DashboardClient({
                   : game.skillLevel === "INTERMEDIATE"
                     ? "Intermediate"
                     : "Advanced";
-              const time = new Date(game.dateTime).toLocaleString([], {
-                weekday: "short",
-                hour: "2-digit",
-                minute: "2-digit",
-              });
+              const time = formatGameTime(new Date(game.dateTime));
               return (
                 <Link key={game.gameID} href={`/games/${game.gameID}`}>
                   <GameRow
