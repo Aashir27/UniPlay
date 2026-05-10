@@ -33,6 +33,7 @@ enum NotificationType {
   CANCELLATION
   WITHDRAWAL
   REMINDER
+  GAME_INVITE
 }
 
 model User {

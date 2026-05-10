@@ -11,10 +11,12 @@ export type UserRowData = {
 export function UserRow({
   user,
   onViewProfile,
+  onInvite,
   showSkillLevel = false,
 }: {
   user: UserRowData;
   onViewProfile: (userID: string) => void;
+  onInvite?: (userID: string) => void;
   showSkillLevel?: boolean;
 }) {
   const skillLabel =
@@ -46,8 +48,13 @@ export function UserRow({
           View Profile
         </button>
         <button
-          disabled
-          className="cursor-not-allowed rounded-[10px] border border-[var(--up-border-mid)] bg-[var(--up-surface)] px-3 py-1 text-sm font-medium text-[var(--up-muted)] opacity-50"
+          onClick={() => onInvite?.(user.userID)}
+          disabled={!onInvite}
+          className={`rounded-[10px] border border-[var(--up-border-mid)] px-3 py-1 text-sm font-medium transition ${
+            onInvite
+              ? "text-[var(--up-text)] hover:bg-[var(--up-accent-bg)] hover:text-[var(--up-accent)]"
+              : "cursor-not-allowed text-[var(--up-muted)] opacity-50"
+          }`}
         >
           Invite
         </button>
