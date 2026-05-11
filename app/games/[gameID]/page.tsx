@@ -1,5 +1,6 @@
 import { prisma } from "@/src/lib/prisma";
 import { getServerSession } from "next-auth";
+import { ParticipationStatus } from "@prisma/client";
 
 import { authOptions } from "@/src/lib/auth";
 import ViewGameClient from "./ViewGameClient";
@@ -18,7 +19,9 @@ export default async function ViewGamePage({
     include: {
       creator: { select: { userID: true, name: true, email: true } },
       participations: {
-        where: { status: { in: ["PENDING", "ACCEPTED"] } },
+        where: {
+          status: ParticipationStatus.ACCEPTED,
+        },
         include: {
           user: { select: { userID: true, name: true, email: true } },
         },
@@ -44,11 +47,12 @@ export default async function ViewGamePage({
   const hasJoined =
     currentUserID !== null &&
     game.participations.some((p) => p.userID === currentUserID);
+  const currentCount = game.participations.length;
 
   return (
     <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 px-6 py-10">
       <ViewGameClient
-        game={game}
+        game={{ ...game, currentCount }}
         isCreator={isCreator}
         currentUserID={currentUserID}
         hasJoined={hasJoined}

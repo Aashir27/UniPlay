@@ -6,6 +6,7 @@ import { authOptions } from "@/src/lib/auth";
 import { prisma } from "@/src/lib/prisma";
 import { markAsRead } from "@/src/services/notification.service";
 import { joinGame } from "@/src/services/participation.service";
+import { NotificationType, ParticipationStatus } from "@prisma/client";
 
 const NotificationActionSchema = z.object({
   action: z.enum(["accept", "decline"]),
@@ -58,6 +59,20 @@ export async function POST(
   }
 
   if (action === "decline") {
+    if (
+      notification.type === NotificationType.GAME_INVITE &&
+      notification.relatedGameID
+    ) {
+      await prisma.participation.updateMany({
+        where: {
+          userID,
+          gameID: notification.relatedGameID,
+          status: ParticipationStatus.PENDING,
+        },
+        data: { status: ParticipationStatus.REJECTED },
+      });
+    }
+
     // Mark as read
     await markAsRead(notifID);
     return NextResponse.json({ ok: true });

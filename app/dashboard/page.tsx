@@ -1,8 +1,10 @@
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
+import { ParticipationStatus } from "@prisma/client";
 
 import { authOptions } from "@/src/lib/auth";
 import { prisma } from "@/src/lib/prisma";
+import { withAcceptedParticipantCounts } from "@/src/services/game.service";
 import { DashboardClient } from "./DashboardClient";
 
 export const dynamic = "force-dynamic";
@@ -85,7 +87,7 @@ export default async function DashboardPage() {
     prisma.participation.count({
       where: {
         userID,
-        status: { in: ["PENDING", "ACCEPTED"] },
+        status: ParticipationStatus.ACCEPTED,
         game: { creatorID: { not: userID } },
       },
     }),
@@ -103,11 +105,13 @@ export default async function DashboardPage() {
       where: { recipientID: userID, isRead: false },
     }),
     // Latest open games for the feed (up to 5)
-    prisma.game.findMany({
-      where: { status: "OPEN" },
-      orderBy: { dateTime: "asc" },
-      take: 5,
-    }),
+    prisma.game
+      .findMany({
+        where: { status: "OPEN" },
+        orderBy: { dateTime: "asc" },
+        take: 5,
+      })
+      .then((games) => withAcceptedParticipantCounts(games)),
     // Get recommendations
     getRecommendations(userID),
   ]);

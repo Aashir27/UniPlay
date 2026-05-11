@@ -4,9 +4,8 @@ import { z } from "zod";
 
 import { authOptions } from "@/src/lib/auth";
 import { prisma } from "@/src/lib/prisma";
-import { createNotification } from "@/src/services/notification.service";
 import { formatSportEvent } from "@/src/lib/formatSport";
-import { NotificationType } from "@prisma/client";
+import { NotificationType, ParticipationStatus } from "@prisma/client";
 
 const SendInviteSchema = z.object({
   targetUserID: z.string().uuid("Invalid user ID"),
@@ -76,7 +75,7 @@ export async function POST(
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 
-  // Check if target user already has participation
+  // Check if target user already has active participation
   const existing = await prisma.participation.findUnique({
     where: {
       userID_gameID: {
@@ -86,12 +85,20 @@ export async function POST(
     },
   });
 
-  if (existing) {
+  const hasActiveParticipation =
+    existing?.status === ParticipationStatus.PENDING ||
+    existing?.status === ParticipationStatus.ACCEPTED;
+
+  if (hasActiveParticipation) {
     return NextResponse.json(
       { error: "User is already invited or a participant" },
       { status: 400 },
     );
   }
+
+  const shouldReactivateParticipation =
+    existing?.status === ParticipationStatus.CANCELLED ||
+    existing?.status === ParticipationStatus.REJECTED;
 
   // Check if invite notification already exists for this user+game
   const existingInvite = await prisma.notification.findFirst({
@@ -102,7 +109,7 @@ export async function POST(
     },
   });
 
-  if (existingInvite) {
+  if (existingInvite && !shouldReactivateParticipation) {
     return NextResponse.json(
       { error: "Invite already sent to this user for this game" },
       { status: 400 },
@@ -113,11 +120,38 @@ export async function POST(
   const message = `${game.creator.name} invited you to join a ${gameDetails}`;
 
   try {
-    const notification = await createNotification({
-      recipientID: targetUserID,
-      type: NotificationType.GAME_INVITE,
-      message,
-      relatedGameID: gameID,
+    const notification = await prisma.$transaction(async (tx) => {
+      if (shouldReactivateParticipation) {
+        await tx.participation.update({
+          where: {
+            userID_gameID: {
+              userID: targetUserID,
+              gameID,
+            },
+          },
+          data: {
+            status: ParticipationStatus.PENDING,
+            joinedAt: new Date(),
+          },
+        });
+      } else {
+        await tx.participation.create({
+          data: {
+            userID: targetUserID,
+            gameID,
+            status: ParticipationStatus.PENDING,
+          },
+        });
+      }
+
+      return tx.notification.create({
+        data: {
+          recipientID: targetUserID,
+          type: NotificationType.GAME_INVITE,
+          message,
+          relatedGameID: gameID,
+        },
+      });
     });
 
     return NextResponse.json({ notification }, { status: 201 });

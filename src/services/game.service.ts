@@ -5,10 +5,13 @@ import type {
   PrismaClient,
   SkillLevel,
 } from "@prisma/client";
+import { ParticipationStatus } from "@prisma/client";
 
 import { prisma } from "@/src/lib/prisma";
 
 type DbClient = PrismaClient | Prisma.TransactionClient;
+
+type CountedGame = { gameID: string; currentCount: number };
 
 export interface CreateGameInput {
   creatorID: string;
@@ -80,9 +83,47 @@ export async function filterGames(
       : {}),
   };
 
-  return db.game.findMany({
+  const games = await db.game.findMany({
     where,
     orderBy: { dateTime: "asc" },
+  });
+
+  return withAcceptedParticipantCounts(games, db);
+}
+
+export async function withAcceptedParticipantCounts<T extends CountedGame>(
+  games: T[],
+  db: DbClient = prisma,
+): Promise<T[]> {
+  if (games.length === 0) return games;
+
+  const counts = await db.participation.groupBy({
+    by: ["gameID"],
+    where: {
+      gameID: { in: games.map((game) => game.gameID) },
+      status: ParticipationStatus.ACCEPTED,
+    },
+    _count: { _all: true },
+  });
+  const countByGameID = new Map(
+    counts.map((count) => [count.gameID, count._count._all]),
+  );
+
+  return games.map((game) => ({
+    ...game,
+    currentCount: countByGameID.get(game.gameID) ?? 0,
+  }));
+}
+
+export async function getAcceptedParticipantCount(
+  gameID: string,
+  db: DbClient = prisma,
+): Promise<number> {
+  return db.participation.count({
+    where: {
+      gameID,
+      status: ParticipationStatus.ACCEPTED,
+    },
   });
 }
 

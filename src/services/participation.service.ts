@@ -66,10 +66,7 @@ export async function joinGame(
           });
 
           if (existing) {
-            if (
-              existing.status === ParticipationStatus.PENDING ||
-              existing.status === ParticipationStatus.ACCEPTED
-            ) {
+            if (existing.status === ParticipationStatus.ACCEPTED) {
               return existing;
             }
 
@@ -81,7 +78,7 @@ export async function joinGame(
                 },
               },
               data: {
-                status: ParticipationStatus.PENDING,
+                status: ParticipationStatus.ACCEPTED,
                 joinedAt: new Date(),
               },
             });
@@ -121,7 +118,7 @@ export async function joinGame(
             data: {
               userID: input.userID,
               gameID: input.gameID,
-              status: ParticipationStatus.PENDING,
+              status: ParticipationStatus.ACCEPTED,
             },
           });
 

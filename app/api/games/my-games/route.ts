@@ -1,5 +1,6 @@
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
+import { ParticipationStatus } from "@prisma/client";
 
 import { authOptions } from "@/src/lib/auth";
 import { prisma } from "@/src/lib/prisma";
@@ -17,7 +18,7 @@ export async function GET(): Promise<NextResponse> {
       participations: {
         some: {
           userID,
-          status: "ACCEPTED",
+          status: ParticipationStatus.ACCEPTED,
         },
       },
       // Exclude games that have already completed

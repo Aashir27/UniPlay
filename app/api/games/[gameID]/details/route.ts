@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { prisma } from "@/src/lib/prisma";
+import { getAcceptedParticipantCount } from "@/src/services/game.service";
 
 export async function GET(
   _req: Request,
@@ -31,5 +32,7 @@ export async function GET(
     return NextResponse.json({ error: "Game not found" }, { status: 404 });
   }
 
-  return NextResponse.json({ game });
+  const currentCount = await getAcceptedParticipantCount(game.gameID);
+
+  return NextResponse.json({ game: { ...game, currentCount } });
 }
