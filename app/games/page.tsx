@@ -35,7 +35,7 @@ export default async function BrowseGamesPage({
       <div>
         <h1 className="text-3xl font-bold">Browse Games</h1>
         <p className="mt-2 text-sm text-[var(--up-muted)]">
-          Find and join open games in your area and skill level.
+          Find games you like.
         </p>
       </div>
 
