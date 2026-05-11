@@ -49,6 +49,7 @@ export interface VerifyEmailInput {
 const OTP_EXPIRY_MINUTES = 15;
 const OTP_BCRYPT_ROUNDS = 10;
 const PASSWORD_BCRYPT_ROUNDS = 10;
+const PRODUCTION_APP_URL = "https://uni-play-nu.vercel.app";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -68,6 +69,10 @@ function generateOtp(): string {
   // Use rejection sampling to avoid modulo bias.
   // crypto.randomInt(min, max) is exclusive of max.
   return String(crypto.randomInt(100_000, 1_000_000));
+}
+
+function getAppBaseUrl(): string {
+  return (process.env.APP_URL ?? process.env.NEXTAUTH_URL ?? PRODUCTION_APP_URL).replace(/\/+$/, "");
 }
 
 /**
@@ -292,10 +297,11 @@ export async function issuePasswordReset(
     },
   });
 
-  const appUrl = process.env.APP_URL ?? "http://localhost:3000";
-  const link = `${appUrl.replace(/\/$/, "")}/reset-password?token=${token}&uid=${user.userID}`;
+  const resetUrl = new URL("/reset-password", getAppBaseUrl());
+  resetUrl.searchParams.set("token", token);
+  resetUrl.searchParams.set("uid", user.userID);
 
-  await sendPasswordResetEmail({ to: user.email, name: user.name, link });
+  await sendPasswordResetEmail({ to: user.email, name: user.name, link: resetUrl.toString() });
 }
 
 export interface ResetPasswordInput {
