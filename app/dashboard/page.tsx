@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 async function getRecommendations(userID: string) {
   // Fetch sports from games created by the current user
   const createdGames = await prisma.game.findMany({
-    where: { creatorID: userID },
+    where: { creatorID: userID, status: "OPEN" },
     select: { sport: true },
     distinct: ["sport"],
   });
