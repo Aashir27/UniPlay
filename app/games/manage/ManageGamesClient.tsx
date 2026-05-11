@@ -10,17 +10,25 @@ import { createGameActionHandlers } from "@/src/components/games/gameActions";
 interface ManageGamesClientProps {
   createdGames: Game[];
   joinedGames: Game[];
+  historyGames: Game[];
+  joinedHistoryGames: Game[];
 }
 
 export default function ManageGamesClient({
   createdGames,
   joinedGames,
+  historyGames,
+  joinedHistoryGames,
 }: ManageGamesClientProps) {
   const router = useRouter();
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [localCreatedGames, setLocalCreatedGames] = useState(createdGames);
   const [localJoinedGames, setLocalJoinedGames] = useState(joinedGames);
+  const [localHistoryGames, setLocalHistoryGames] = useState([
+    ...historyGames,
+    ...joinedHistoryGames,
+  ]);
   const [deletingGameID, setDeletingGameID] = useState<string | null>(null);
   const [withdrawingGameID, setWithdrawingGameID] = useState<string | null>(
     null,
@@ -55,9 +63,18 @@ export default function ManageGamesClient({
         return;
       }
 
-      setLocalCreatedGames((prev) =>
-        prev.map((g) => (g.gameID === gameID ? { ...g, status } : g)),
-      );
+      const gameToMove = localCreatedGames.find((g) => g.gameID === gameID);
+      if (status === "COMPLETED" && gameToMove) {
+        const completedGame = { ...gameToMove, status };
+        setLocalCreatedGames((prev) =>
+          prev.filter((g) => g.gameID !== gameID),
+        );
+        setLocalHistoryGames((prev) => [completedGame, ...prev]);
+      } else {
+        setLocalCreatedGames((prev) =>
+          prev.map((g) => (g.gameID === gameID ? { ...g, status } : g)),
+        );
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
@@ -287,6 +304,42 @@ export default function ManageGamesClient({
                 </div>
               );
             })}
+          </div>
+        )}
+      </div>
+
+      <div className="space-y-3">
+        <h2 className="text-lg font-semibold">History</h2>
+        {localHistoryGames.length === 0 ? (
+          <div className="rounded-[20px] border border-[var(--up-border)] bg-[var(--up-surface)] p-6 text-center">
+            <p className="text-sm text-[var(--up-muted)]">
+              No completed games yet.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {localHistoryGames.map((game) => (
+              <div
+                key={game.gameID}
+                className="flex flex-col gap-3 rounded-[20px] border border-[var(--up-border)] bg-[var(--up-surface)] p-4 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div className="flex-1">
+                  <div className="flex items-center gap-3">
+                    <h3 className="font-semibold">{game.sport}</h3>
+                    {statusBadge(game.status)}
+                  </div>
+                  <p className="mt-1 text-sm text-[var(--up-muted)]">
+                    {formatGameDateTime(new Date(game.dateTime))}
+                  </p>
+                  <p className="mt-1 text-xs text-[var(--up-muted)]">
+                    {game.location}
+                  </p>
+                  <p className="mt-1 text-xs text-[var(--up-muted)]">
+                    {game.currentCount}/{game.maxParticipants} participants
+                  </p>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>

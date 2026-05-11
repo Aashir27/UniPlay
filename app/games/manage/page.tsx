@@ -1,7 +1,7 @@
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { ParticipationStatus } from "@prisma/client";
+import { GameStatus, ParticipationStatus } from "@prisma/client";
 
 import { authOptions } from "@/src/lib/auth";
 import { prisma } from "@/src/lib/prisma";
@@ -17,7 +17,38 @@ export default async function ManageGamesPage() {
     redirect("/login");
   }
 
-  const createdGames = await filterGames({ creatorID: session.user.id });
+  const createdGames = await filterGames({
+    creatorID: session.user.id,
+    status: [
+      GameStatus.DRAFT,
+      GameStatus.OPEN,
+      GameStatus.FULL,
+      GameStatus.CANCELLED,
+    ],
+  });
+
+  const historyGames = await filterGames({
+    creatorID: session.user.id,
+    status: GameStatus.COMPLETED,
+  });
+
+  const joinedHistoryGames = await withAcceptedParticipantCounts(
+    await prisma.game.findMany({
+      where: {
+        participations: {
+          some: {
+            userID: session.user.id,
+            status: ParticipationStatus.ACCEPTED,
+          },
+        },
+        creatorID: {
+          not: session.user.id,
+        },
+        status: GameStatus.COMPLETED,
+      },
+      orderBy: { dateTime: "asc" },
+    }),
+  );
 
   const joinedGames = await withAcceptedParticipantCounts(
     await prisma.game.findMany({
@@ -50,7 +81,10 @@ export default async function ManageGamesPage() {
         </div>
       </div>
 
-      {createdGames.length === 0 && joinedGames.length === 0 ? (
+      {createdGames.length === 0 &&
+      joinedGames.length === 0 &&
+      historyGames.length === 0 &&
+      joinedHistoryGames.length === 0 ? (
         <div className="rounded-[20px] border border-[var(--up-border)] bg-[var(--up-surface)] p-8 text-center">
           <p className="text-[var(--up-muted)]">
             You haven&apos;t created or joined any games yet.
@@ -66,6 +100,8 @@ export default async function ManageGamesPage() {
         <ManageGamesClient
           createdGames={createdGames}
           joinedGames={joinedGames}
+          historyGames={historyGames}
+          joinedHistoryGames={joinedHistoryGames}
         />
       )}
     </main>
