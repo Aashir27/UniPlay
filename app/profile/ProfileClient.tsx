@@ -93,6 +93,19 @@ export function ProfileClient() {
     );
   }
 
+  function getSportOptions(rowIndex: number) {
+    const selectedInOtherRows = new Set(
+      rows
+        .filter((_, index) => index !== rowIndex)
+        .map((row) => row.sport)
+        .filter(Boolean),
+    );
+
+    return SPORTS.filter((sport) => !selectedInOtherRows.has(sport)).map(
+      (sport) => ({ value: sport, label: sport }),
+    );
+  }
+
   async function saveRow(id: string) {
     const row = rows.find((r) => r.id === id);
     if (!row || !row.sport) {
@@ -144,17 +157,19 @@ export function ProfileClient() {
     setMessage("Saved!");
   }
 
-  async function removeRow(id: string) {
-    const row = rows.find((r) => r.id === id);
+  async function removeRow(index: number) {
+    const row = rows[index];
     if (!row) return;
 
     if (row.isNew) {
-      setRows((prev) => prev.filter((r) => r.id !== id));
+      setRows((prev) => prev.filter((_, rowIndex) => rowIndex !== index));
       return;
     }
 
     setRows((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, isSaving: true } : r)),
+      prev.map((r, rowIndex) =>
+        rowIndex === index ? { ...r, isSaving: true } : r,
+      ),
     );
     setMessage(null);
     setError(null);
@@ -170,12 +185,14 @@ export function ProfileClient() {
     if (!res.ok) {
       setError(data.error ?? "Could not remove sport profile.");
       setRows((prev) =>
-        prev.map((r) => (r.id === id ? { ...r, isSaving: false } : r)),
+        prev.map((r, rowIndex) =>
+          rowIndex === index ? { ...r, isSaving: false } : r,
+        ),
       );
       return;
     }
 
-    setRows((prev) => prev.filter((r) => r.id !== id));
+    setRows((prev) => prev.filter((_, rowIndex) => rowIndex !== index));
     setMessage("Removed.");
   }
 
@@ -218,7 +235,7 @@ export function ProfileClient() {
         </div>
       ) : (
         <ul className="space-y-3">
-          {rows.map((row) => (
+          {rows.map((row, index) => (
             <li
               key={row.id}
               className="grid gap-3 rounded-[16px] border border-[var(--up-border)] bg-[var(--up-surface-2)] p-4 sm:grid-cols-[1fr_1fr_auto]"
@@ -230,7 +247,7 @@ export function ProfileClient() {
                 <Select
                   value={row.sport}
                   onChange={(value) => updateRow(row.id, value, row.skillLevel)}
-                  options={SPORTS.map((s) => ({ value: s, label: s }))}
+                  options={getSportOptions(index)}
                   placeholder="Select sport"
                   disabled={!row.isNew}
                   className="w-full"
@@ -274,7 +291,7 @@ export function ProfileClient() {
                 )}
 
                 <button
-                  onClick={() => removeRow(row.id)}
+                  onClick={() => removeRow(index)}
                   disabled={row.isSaving}
                   className="rounded-[10px] border border-[rgba(248,113,113,0.2)] bg-[var(--up-danger-bg)] px-3 py-2 text-sm font-medium text-[var(--up-danger)] transition hover:bg-[rgba(248,113,113,0.14)] disabled:opacity-50"
                 >
