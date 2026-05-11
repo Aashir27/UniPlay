@@ -8,21 +8,37 @@ import { formatGameDateTime } from "@/lib/formatTime";
 import { createGameActionHandlers } from "@/src/components/games/gameActions";
 
 interface ManageGamesClientProps {
-  games: Game[];
+  createdGames: Game[];
+  joinedGames: Game[];
 }
 
-export default function ManageGamesClient({ games }: ManageGamesClientProps) {
+export default function ManageGamesClient({
+  createdGames,
+  joinedGames,
+}: ManageGamesClientProps) {
   const router = useRouter();
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [localGames, setLocalGames] = useState(games);
+  const [localCreatedGames, setLocalCreatedGames] = useState(createdGames);
+  const [localJoinedGames, setLocalJoinedGames] = useState(joinedGames);
   const [deletingGameID, setDeletingGameID] = useState<string | null>(null);
-  const [withdrawingGameID, setWithdrawingGameID] = useState<string | null>(null);
-  const [leaveConfirmGameID, setLeaveConfirmGameID] = useState<string | null>(null);
-  const [deleteConfirmGameID, setDeleteConfirmGameID] = useState<string | null>(null);
-  const [completeConfirmGameID, setCompleteConfirmGameID] = useState<string | null>(null);
+  const [withdrawingGameID, setWithdrawingGameID] = useState<string | null>(
+    null,
+  );
+  const [leaveConfirmGameID, setLeaveConfirmGameID] = useState<string | null>(
+    null,
+  );
+  const [deleteConfirmGameID, setDeleteConfirmGameID] = useState<string | null>(
+    null,
+  );
+  const [completeConfirmGameID, setCompleteConfirmGameID] = useState<
+    string | null
+  >(null);
 
-  async function patchStatus(gameID: string, status: "COMPLETED" | "CANCELLED") {
+  async function patchStatus(
+    gameID: string,
+    status: "COMPLETED" | "CANCELLED",
+  ) {
     setActionLoading(gameID + status);
     setError(null);
 
@@ -39,10 +55,8 @@ export default function ManageGamesClient({ games }: ManageGamesClientProps) {
         return;
       }
 
-      setLocalGames((prev) =>
-        prev.map((g) =>
-          g.gameID === gameID ? { ...g, status } : g,
-        ),
+      setLocalCreatedGames((prev) =>
+        prev.map((g) => (g.gameID === gameID ? { ...g, status } : g)),
       );
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
@@ -57,11 +71,14 @@ export default function ManageGamesClient({ games }: ManageGamesClientProps) {
 
   const statusBadge = (status: string) => {
     const styles: Record<string, string> = {
-      DRAFT: "border border-[var(--up-border-mid)] bg-[var(--up-surface-2)] text-[var(--up-muted)]",
+      DRAFT:
+        "border border-[var(--up-border-mid)] bg-[var(--up-surface-2)] text-[var(--up-muted)]",
       OPEN: "border border-[rgba(163,230,53,0.25)] bg-[var(--up-accent-bg)] text-[var(--up-accent)]",
       FULL: "border border-[var(--up-border-mid)] bg-[var(--up-surface-2)] text-[var(--up-muted)]",
-      CANCELLED: "border border-[rgba(248,113,113,0.2)] bg-[var(--up-danger-bg)] text-[var(--up-danger)]",
-      COMPLETED: "border border-[var(--up-border-mid)] bg-[var(--up-surface-2)] text-[var(--up-muted)]",
+      CANCELLED:
+        "border border-[rgba(248,113,113,0.2)] bg-[var(--up-danger-bg)] text-[var(--up-danger)]",
+      COMPLETED:
+        "border border-[var(--up-border-mid)] bg-[var(--up-surface-2)] text-[var(--up-muted)]",
     };
     return (
       <span
@@ -75,7 +92,7 @@ export default function ManageGamesClient({ games }: ManageGamesClientProps) {
   const isTerminal = (status: string) =>
     status === "CANCELLED" || status === "COMPLETED";
 
-  const createActionsForGame = (gameID: string) =>
+  const createActionsForGame = (gameID: string, isJoined: boolean = false) =>
     createGameActionHandlers({
       gameID,
       router,
@@ -91,34 +108,45 @@ export default function ManageGamesClient({ games }: ManageGamesClientProps) {
         if (!visible) setDeleteConfirmGameID(null);
       },
       onDeleteComplete: () => {
-        setLocalGames((prev) => prev.filter((g) => g.gameID !== gameID));
+        setLocalCreatedGames((prev) => prev.filter((g) => g.gameID !== gameID));
       },
       onLeaveComplete: () => {
-        setLocalGames((prev) => prev.filter((g) => g.gameID !== gameID));
+        if (isJoined) {
+          setLocalJoinedGames((prev) =>
+            prev.filter((g) => g.gameID !== gameID),
+          );
+        } else {
+          setLocalCreatedGames((prev) =>
+            prev.filter((g) => g.gameID !== gameID),
+          );
+        }
       },
     });
 
-  const leaveConfirmGame = localGames.find(
+  const leaveConfirmGame = [...localCreatedGames, ...localJoinedGames].find(
     (game) => game.gameID === leaveConfirmGameID,
   );
+  const isJoinedGame = leaveConfirmGame
+    ? localJoinedGames.some((g) => g.gameID === leaveConfirmGame.gameID)
+    : false;
   const leaveConfirmActions = leaveConfirmGame
-    ? createActionsForGame(leaveConfirmGame.gameID)
+    ? createActionsForGame(leaveConfirmGame.gameID, isJoinedGame)
     : null;
   const isLeaveConfirmBusy = leaveConfirmGame
     ? withdrawingGameID === leaveConfirmGame.gameID
     : false;
 
-  const deleteConfirmGame = localGames.find(
+  const deleteConfirmGame = localCreatedGames.find(
     (game) => game.gameID === deleteConfirmGameID,
   );
   const deleteConfirmActions = deleteConfirmGame
-    ? createActionsForGame(deleteConfirmGame.gameID)
+    ? createActionsForGame(deleteConfirmGame.gameID, false)
     : null;
   const isDeleteConfirmBusy = deleteConfirmGame
     ? deletingGameID === deleteConfirmGame.gameID
     : false;
 
-  const completeConfirmGame = localGames.find(
+  const completeConfirmGame = localCreatedGames.find(
     (game) => game.gameID === completeConfirmGameID,
   );
   const isCompleteConfirmBusy = completeConfirmGame
@@ -133,71 +161,134 @@ export default function ManageGamesClient({ games }: ManageGamesClientProps) {
         </div>
       )}
 
+      {/* Games You Created Section */}
       <div className="space-y-3">
-        {localGames.map((game) => {
-          const busy = actionLoading?.startsWith(game.gameID) ?? false;
-          const terminal = isTerminal(game.status);
-          const isDeleting = deletingGameID === game.gameID;
-          const isWithdrawing = withdrawingGameID === game.gameID;
-          const actionsDisabled = busy || isDeleting || isWithdrawing;
+        <h2 className="text-lg font-semibold">Games You Created</h2>
+        {localCreatedGames.length === 0 ? (
+          <div className="rounded-[20px] border border-[var(--up-border)] bg-[var(--up-surface)] p-6 text-center">
+            <p className="text-sm text-[var(--up-muted)]">
+              You haven&apos;t created any games yet.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {localCreatedGames.map((game) => {
+              const busy = actionLoading?.startsWith(game.gameID) ?? false;
+              const terminal = isTerminal(game.status);
+              const isDeleting = deletingGameID === game.gameID;
+              const isWithdrawing = withdrawingGameID === game.gameID;
+              const actionsDisabled = busy || isDeleting || isWithdrawing;
 
-          return (
-            <div
-              key={game.gameID}
-              className="flex flex-col gap-3 rounded-[20px] border border-[var(--up-border)] bg-[var(--up-surface)] p-4 sm:flex-row sm:items-center sm:justify-between"
-            >
-              <div className="flex-1">
-                <div className="flex items-center gap-3">
-                  <h3 className="font-semibold">{game.sport}</h3>
-                  {statusBadge(game.status)}
-                </div>
-                <p className="mt-1 text-sm text-[var(--up-muted)]">
-                  {formatGameDateTime(new Date(game.dateTime))}
-                </p>
-                <p className="mt-1 text-xs text-[var(--up-muted)]">
-                  {game.location}
-                </p>
-                <p className="mt-1 text-xs text-[var(--up-muted)]">
-                  {game.currentCount}/{game.maxParticipants} participants
-                </p>
-              </div>
+              return (
+                <div
+                  key={game.gameID}
+                  className="flex flex-col gap-3 rounded-[20px] border border-[var(--up-border)] bg-[var(--up-surface)] p-4 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3">
+                      <h3 className="font-semibold">{game.sport}</h3>
+                      {statusBadge(game.status)}
+                    </div>
+                    <p className="mt-1 text-sm text-[var(--up-muted)]">
+                      {formatGameDateTime(new Date(game.dateTime))}
+                    </p>
+                    <p className="mt-1 text-xs text-[var(--up-muted)]">
+                      {game.location}
+                    </p>
+                    <p className="mt-1 text-xs text-[var(--up-muted)]">
+                      {game.currentCount}/{game.maxParticipants} participants
+                    </p>
+                  </div>
 
-              {!terminal && (
-                <div className="flex gap-2">
-                  <Link
-                    href={`/games/${game.gameID}/edit`}
-                    className="rounded-[10px] border border-[var(--up-border-mid)] px-3 py-2 text-sm font-medium text-[var(--up-text)] transition hover:bg-[var(--up-accent-bg)] hover:text-[var(--up-accent)]"
-                  >
-                    Edit Game
-                  </Link>
-                  <button
-                    onClick={() => handleComplete(game.gameID)}
-                    disabled={actionsDisabled}
-                    className="rounded-[10px] bg-[var(--up-accent)] px-3 py-2 text-sm font-medium text-[#0b0f1a] transition hover:bg-[var(--up-accent-dim)] disabled:opacity-50"
-                  >
-                    {actionLoading === game.gameID + "COMPLETED"
-                      ? "Saving..."
-                      : "Mark as Completed"}
-                  </button>
-                  <button
-                    onClick={() => setDeleteConfirmGameID(game.gameID)}
-                    disabled={actionsDisabled}
-                    className="rounded-[10px] border border-[rgba(248,113,113,0.2)] bg-[var(--up-danger-bg)] px-3 py-2 text-sm font-medium text-[var(--up-danger)] transition hover:bg-[rgba(248,113,113,0.14)] disabled:opacity-50"
-                  >
-                    {isDeleting ? "Deleting..." : "Delete Game"}
-                  </button>
-                  <button
-                    onClick={() => setLeaveConfirmGameID(game.gameID)}
-                    disabled={actionsDisabled}
-                    className="rounded-[10px] border border-[rgba(248,113,113,0.25)] px-3 py-2 text-sm font-medium text-[var(--up-danger)] transition hover:bg-[var(--up-danger-bg)] disabled:opacity-50"
-                  >
-                    {isWithdrawing ? "Leaving..." : "Leave Game"}
-                  </button>
+                  {!terminal && (
+                    <div className="flex gap-2">
+                      <Link
+                        href={`/games/${game.gameID}/edit`}
+                        className="rounded-[10px] border border-[var(--up-border-mid)] px-3 py-2 text-sm font-medium text-[var(--up-text)] transition hover:bg-[var(--up-accent-bg)] hover:text-[var(--up-accent)]"
+                      >
+                        Edit Game
+                      </Link>
+                      <button
+                        onClick={() => handleComplete(game.gameID)}
+                        disabled={actionsDisabled}
+                        className="rounded-[10px] bg-[var(--up-accent)] px-3 py-2 text-sm font-medium text-[#0b0f1a] transition hover:bg-[var(--up-accent-dim)] disabled:opacity-50"
+                      >
+                        {actionLoading === game.gameID + "COMPLETED"
+                          ? "Saving..."
+                          : "Mark as Completed"}
+                      </button>
+                      <button
+                        onClick={() => setDeleteConfirmGameID(game.gameID)}
+                        disabled={actionsDisabled}
+                        className="rounded-[10px] border border-[rgba(248,113,113,0.2)] bg-[var(--up-danger-bg)] px-3 py-2 text-sm font-medium text-[var(--up-danger)] transition hover:bg-[rgba(248,113,113,0.14)] disabled:opacity-50"
+                      >
+                        {isDeleting ? "Deleting..." : "Delete Game"}
+                      </button>
+                      <button
+                        onClick={() => setLeaveConfirmGameID(game.gameID)}
+                        disabled={actionsDisabled}
+                        className="rounded-[10px] border border-[rgba(248,113,113,0.25)] px-3 py-2 text-sm font-medium text-[var(--up-danger)] transition hover:bg-[var(--up-danger-bg)] disabled:opacity-50"
+                      >
+                        {isWithdrawing ? "Leaving..." : "Leave Game"}
+                      </button>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          );
-        })}
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Games You've Joined Section */}
+      <div className="space-y-3">
+        <h2 className="text-lg font-semibold">Games You&apos;ve Joined</h2>
+        {localJoinedGames.length === 0 ? (
+          <div className="rounded-[20px] border border-[var(--up-border)] bg-[var(--up-surface)] p-6 text-center">
+            <p className="text-sm text-[var(--up-muted)]">
+              You haven&apos;t joined any games yet.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {localJoinedGames.map((game) => {
+              const isWithdrawing = withdrawingGameID === game.gameID;
+
+              return (
+                <div
+                  key={game.gameID}
+                  className="flex flex-col gap-3 rounded-[20px] border border-[var(--up-border-mid)] bg-[var(--up-surface-2)] p-4 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3">
+                      <h3 className="font-semibold">{game.sport}</h3>
+                      {statusBadge(game.status)}
+                    </div>
+                    <p className="mt-1 text-sm text-[var(--up-muted)]">
+                      {formatGameDateTime(new Date(game.dateTime))}
+                    </p>
+                    <p className="mt-1 text-xs text-[var(--up-muted)]">
+                      {game.location}
+                    </p>
+                    <p className="mt-1 text-xs text-[var(--up-muted)]">
+                      {game.currentCount}/{game.maxParticipants} participants
+                    </p>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setLeaveConfirmGameID(game.gameID)}
+                      disabled={isWithdrawing}
+                      className="rounded-[10px] border border-[rgba(248,113,113,0.25)] px-3 py-2 text-sm font-medium text-[var(--up-danger)] transition hover:bg-[var(--up-danger-bg)] disabled:opacity-50"
+                    >
+                      {isWithdrawing ? "Leaving..." : "Leave Game"}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {leaveConfirmGame && leaveConfirmActions && (
@@ -271,7 +362,9 @@ export default function ManageGamesClient({ games }: ManageGamesClientProps) {
           aria-modal="true"
         >
           <div className="w-full max-w-md rounded-[18px] border border-[var(--up-border)] bg-[var(--up-surface)] p-6 shadow-2xl shadow-black/40">
-            <h3 className="text-lg font-semibold">Mark this game as completed?</h3>
+            <h3 className="text-lg font-semibold">
+              Mark this game as completed?
+            </h3>
             <p className="mt-2 text-sm text-[var(--up-muted)]">
               This will finalize the game and close participation.
             </p>
