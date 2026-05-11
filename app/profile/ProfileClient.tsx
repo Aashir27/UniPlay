@@ -214,7 +214,7 @@ export function ProfileClient() {
 
       {rows.length === 0 ? (
         <div className="rounded-[16px] border border-[var(--up-border)] bg-[var(--up-surface-2)] p-5 text-sm text-[var(--up-muted)]">
-          No sports added yet. Click "Add sport" to create your first entry.
+          No sports added yet. Click &quot;Add sport&quot; to create your first entry.
         </div>
       ) : (
         <ul className="space-y-3">

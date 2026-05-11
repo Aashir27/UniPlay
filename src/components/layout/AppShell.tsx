@@ -84,7 +84,18 @@ export function AppShell({ children, userName }: AppShellProps) {
   function handleBellClick() {
     if (!notifOpen) {
       const rect = bellRef.current?.getBoundingClientRect();
-      setPanelTop(rect?.top ?? 120);
+      const bellTop = rect?.top ?? 120;
+      const bellBottom = rect?.bottom ?? 160;
+      const panelHeight = 320; // ~max-h-[240px] + header + padding
+      const viewportHeight = window.innerHeight;
+      
+      // If panel would overflow below viewport, position it above the bell instead
+      if (bellBottom + panelHeight > viewportHeight) {
+        setPanelTop(Math.max(8, bellTop - panelHeight - 8));
+      } else {
+        setPanelTop(bellBottom + 8);
+      }
+      
       setNotifLoading(true);
       fetchNotifications().finally(() => setNotifLoading(false));
     }
@@ -226,7 +237,7 @@ export function AppShell({ children, userName }: AppShellProps) {
           </div>
 
           {/* List */}
-          <div className="max-h-[120px] overflow-y-auto">
+          <div className="max-h-[240px] overflow-y-auto">
             {notifLoading && count === 0 ? (
               <p className="py-10 text-center text-xs text-[var(--up-muted)]">
                 Loading…
@@ -267,7 +278,7 @@ function NotificationCardWrapper({
   notification: NotificationItem;
   onActionComplete: () => void;
 }) {
-  const [game, setGame] = useState<any>(null);
+  const [game, setGame] = useState<{ sport: string; dateTime: string; location: string; skillLevel: string } | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

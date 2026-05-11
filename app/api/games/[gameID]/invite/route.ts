@@ -93,7 +93,21 @@ export async function POST(
     );
   }
 
-  // Create notification for invite
+  // Check if invite notification already exists for this user+game
+  const existingInvite = await prisma.notification.findFirst({
+    where: {
+      recipientID: targetUserID,
+      relatedGameID: gameID,
+      type: NotificationType.GAME_INVITE,
+    },
+  });
+
+  if (existingInvite) {
+    return NextResponse.json(
+      { error: "Invite already sent to this user for this game" },
+      { status: 400 },
+    );
+  }
   const gameDetails = formatSportEvent(game.sport);
 
   const message = `${game.creator.name} invited you to join a ${gameDetails}`;

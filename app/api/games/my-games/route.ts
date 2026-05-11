@@ -20,6 +20,8 @@ export async function GET(): Promise<NextResponse> {
           status: "ACCEPTED",
         },
       },
+      // Exclude games that have already completed
+      status: { not: "COMPLETED" },
     },
     select: {
       gameID: true,
